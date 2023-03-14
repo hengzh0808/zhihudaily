@@ -1,0 +1,128 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:zhihudaily/home/DailyHomeModel.dart';
+import 'package:dio/dio.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+
+class DailyHome extends StatefulWidget {
+  const DailyHome({ Key? key }) : super(key: key);
+
+  @override
+  _DailyHomeState createState() => _DailyHomeState();
+}
+
+class _DailyHomeState extends State<DailyHome> {
+  var _weekDay = "", _month = "";
+  final Dio _dio = Dio();
+  List<DailyHomeModel> _dailyItems = [];
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    initializeDateFormatting();
+    setState(() {
+      _weekDay = DateFormat('EEEE',"zh_CN").format(DateTime.now());
+      _month = DateFormat('MMMM',"zh_CN").format(DateTime.now());
+    });
+    _fetchItems();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        titleSpacing: 0,
+        title: Row(
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(15, 0, 15, 0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text("$_weekDay", style: TextStyle(fontSize: 20, color: Colors.black87)),
+                  Text("$_month", style: TextStyle(fontSize: 15, color: Colors.black54, fontWeight: FontWeight.bold)),
+                ]
+              ),
+            ),
+            Container(
+              width: 1.5,
+              height: kToolbarHeight - 20,
+              color: Colors.black.withAlpha(25),
+            )
+          ],
+        ),
+      ),
+      body: Container(
+        color: Colors.blue,
+        child: CustomScrollView(
+          slivers: _dailyItems.map((daily) {
+            final stories = daily.stories ?? [];
+            return SliverList(delegate: SliverChildBuilderDelegate(childCount: stories.length, (context, index) {
+              return Container(
+                padding: EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: EdgeInsets.fromLTRB(0, 0, 12, 0),
+                        color: Colors.red,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              stories[index].title ?? "",
+                              maxLines: 2,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold, 
+                                fontSize: 18, 
+                                color: Colors.black87,
+                                textBaseline: TextBaseline.alphabetic, 
+                                // 怎么才能底部对齐
+                                overflow: TextOverflow.ellipsis,
+                              )
+                            ),
+                            Container(height: 5),
+                            Text(stories[index].hint ?? "", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black54)),
+                          ]
+                        ),
+                      ),
+                    ),
+                    Image.network(
+                      stories[index].image(),
+                      width: 80.0,
+                      height: 80.0,
+                    ),
+                  ],
+                ),
+              );
+            }));
+          }).toList()
+        ),
+      ),
+    );
+  }
+
+  _fetchItems([String? date]) async {
+    Response response;
+    try {
+      if (date != null) {
+        response = await _dio.get('https://news-at.zhihu.com/api/4/news/before/$date');
+      } else {
+        response = await _dio.get('https://news-at.zhihu.com/api/4/news/latest');
+      }
+      final res = DailyHomeModel.fromJson(response.data);
+      setState(() {
+        if (date == null) {
+          _dailyItems = [res];
+        } else {
+          _dailyItems.add(res);
+        }
+      });
+    } on DioError catch(e) {
+      Fluttertoast.showToast(msg: "请求失败 $e");
+    }
+  }
+}
