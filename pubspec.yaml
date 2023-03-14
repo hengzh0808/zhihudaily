@@ -84,5 +84,18 @@ flutter:
   #       - asset: fonts/TrajanPro_Bold.ttf
   #         weight: 700
   #
+  fonts:
+    - family: MiSans
+      fonts:
+        - asset: fonts/MiSans-Bold.ttf
+        - asset: fonts/MiSans-Demibold.ttf
+        - asset: fonts/MiSans-ExtraLight.ttf
+        - asset: fonts/MiSans-Heavy.ttf
+        - asset: fonts/MiSans-Light.ttf
+        - asset: fonts/MiSans-Medium.ttf
+        - asset: fonts/MiSans-Normal.ttf
+        - asset: fonts/MiSans-Regular.ttf
+        - asset: fonts/MiSans-Semibold.ttf
+        - asset: fonts/MiSans-Thin.ttf
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
