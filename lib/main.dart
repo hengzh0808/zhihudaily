@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:zhihudaily/home/DailyHome.dart';
 
 void main() {
   // debugPaintSizeEnabled = true;
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+    )
+  );
   runApp(const MyApp());
 }
 
