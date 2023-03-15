@@ -4,11 +4,9 @@ import 'package:zhihudaily/home/DailyHome.dart';
 
 void main() {
   // debugPaintSizeEnabled = true;
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-    )
-  );
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+  ));
   runApp(const MyApp());
 }
 

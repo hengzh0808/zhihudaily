@@ -22,7 +22,6 @@ class _DailyHomeState extends State<DailyHome> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     initializeDateFormatting();
     setState(() {
@@ -41,14 +40,15 @@ class _DailyHomeState extends State<DailyHome> {
         title: Row(
           children: [
             Padding(
-              padding: EdgeInsets.fromLTRB(15, 0, 15, 0),
+              padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
               child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text("$_weekDay",
-                        style: TextStyle(fontSize: 20, color: Colors.black87)),
-                    Text("$_month",
-                        style: TextStyle(
+                    Text(_weekDay,
+                        style: const TextStyle(
+                            fontSize: 20, color: Colors.black87)),
+                    Text(_month,
+                        style: const TextStyle(
                             fontSize: 15,
                             color: Colors.black54,
                             fontWeight: FontWeight.bold)),
@@ -74,12 +74,12 @@ class _DailyHomeState extends State<DailyHome> {
                   delegate: SliverChildBuilderDelegate(
                       childCount: stories.length, (context, index) {
                 return Container(
-                  padding: EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(12),
                   child: Row(
                     children: [
                       Expanded(
                         child: Container(
-                          padding: EdgeInsets.fromLTRB(0, 0, 12, 0),
+                          padding: const EdgeInsets.fromLTRB(0, 0, 12, 0),
                           color: Colors.red,
                           child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,22 +91,25 @@ class _DailyHomeState extends State<DailyHome> {
                                       fontSize: 18,
                                       color: Colors.black87,
                                       textBaseline: TextBaseline.alphabetic,
-                                      // 怎么才能底部对齐
                                       overflow: TextOverflow.ellipsis,
                                     )),
                                 Container(height: 5),
                                 Text(stories[index].hint ?? "",
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 15,
                                         color: Colors.black54)),
                               ]),
                         ),
                       ),
-                      Image.network(
-                        stories[index].image(),
-                        width: 80.0,
-                        height: 80.0,
+                      ConstrainedBox(
+                        constraints: BoxConstraints.tight(const Size(80, 80)),
+                        child: FadeInImage.assetNetwork(
+                            placeholder: 'assets/images/placeholder.jpg',
+                            imageErrorBuilder: _imageErrorBuilder,
+                            fit: BoxFit.cover,
+                            //TODO 这里有一张图片无法加载
+                            image: stories[index].image()),
                       ),
                     ],
                   ),
@@ -115,6 +118,10 @@ class _DailyHomeState extends State<DailyHome> {
             }).toList()),
           )),
     );
+  }
+
+  Image _imageErrorBuilder(context, error, stackTrace) {
+    return Image.asset('assets/images/placeholder.jpg', fit: BoxFit.cover);
   }
 
   _refresh() async {
