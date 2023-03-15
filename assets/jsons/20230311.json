@@ -1,0 +1,49 @@
+{
+  "date": "20230310",
+  "stories": [{
+    "image_hue": "0xaa7db3",
+    "title": "什么是情绪价值？",
+    "url": "https:\/\/daily.zhihu.com\/story\/9759059",
+    "hint": "KnowYourself · 11 分钟阅读",
+    "ga_prefix": "031007",
+    "images": ["https:\/\/picx.zhimg.com\/v2-0b065b42cfaa299ec3954fb0164678d9.jpg?source=8673f162"],
+    "type": 0,
+    "id": 9759059
+  }, {
+    "image_hue": "0xb3947d",
+    "title": "霰石、方解石、長石、輝石、石英、雲母等什么石什么石的是按什麼分類的，怎麼歸類區別？",
+    "url": "https:\/\/daily.zhihu.com\/story\/9759061",
+    "hint": "暗明的云 · 3 分钟阅读",
+    "ga_prefix": "031007",
+    "images": ["https:\/\/picx.zhimg.com\/v2-d0dbc888e3635f0b18f0ac176c8bacce.jpg?source=8673f162"],
+    "type": 0,
+    "id": 9759061
+  }, {
+    "image_hue": "0xb3b3b3",
+    "title": "元和四个汗国之间到底是什么关系？",
+    "url": "https:\/\/daily.zhihu.com\/story\/9759071",
+    "hint": "安森垚 · 17 分钟阅读",
+    "ga_prefix": "031007",
+    "images": ["https:\/\/pic1.zhimg.com\/v2-0842db157b20a5725dfa1f94a60d3d17.jpg?source=8673f162"],
+    "type": 0,
+    "id": 9759071
+  }, {
+    "image_hue": "0xb39a70",
+    "title": "朱熹为什么有两个字：元晦，仲晦？",
+    "url": "https:\/\/daily.zhihu.com\/story\/9759077",
+    "hint": "豆子 · 1 分钟阅读",
+    "ga_prefix": "031007",
+    "images": ["https:\/\/picx.zhimg.com\/v2-d53bbce4ff8c09d014f56679d2ab959d.jpg?source=8673f162"],
+    "type": 0,
+    "id": 9759077
+  }, {
+    "image_hue": "0x464d36",
+    "title": "瞎扯 · 如何正确地吐槽",
+    "url": "https:\/\/daily.zhihu.com\/story\/9759092",
+    "hint": "VOL.3056",
+    "ga_prefix": "031006",
+    "images": ["https:\/\/picx.zhimg.com\/v2-ebea160a6e10a6daee0b5e1cafb90182.jpg?source=8673f162"],
+    "type": 0,
+    "id": 9759092
+  }]
+}

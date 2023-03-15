@@ -1,9 +1,12 @@
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:zhihudaily/home/DailyHomeModel.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'dart:convert';
 
 class DailyHome extends StatefulWidget {
   const DailyHome({Key? key}) : super(key: key);
@@ -26,7 +29,7 @@ class _DailyHomeState extends State<DailyHome> {
       _weekDay = DateFormat('EEEE', "zh_CN").format(DateTime.now());
       _month = DateFormat('MMMM', "zh_CN").format(DateTime.now());
     });
-    _fetchItems();
+    _refresh();
   }
 
   @override
@@ -60,77 +63,113 @@ class _DailyHomeState extends State<DailyHome> {
         ),
       ),
       body: Container(
-        color: Colors.blue,
-        child: CustomScrollView(
-            slivers: _dailyItems.map((daily) {
-          final stories = daily.stories ?? [];
-          return SliverList(
-              delegate: SliverChildBuilderDelegate(childCount: stories.length,
-                  (context, index) {
-            return Container(
-              padding: EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      padding: EdgeInsets.fromLTRB(0, 0, 12, 0),
-                      color: Colors.red,
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(stories[index].title ?? "",
-                                maxLines: 2,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
-                                  color: Colors.black87,
-                                  textBaseline: TextBaseline.alphabetic,
-                                  // 怎么才能底部对齐
-                                  overflow: TextOverflow.ellipsis,
-                                )),
-                            Container(height: 5),
-                            Text(stories[index].hint ?? "",
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15,
-                                    color: Colors.black54)),
-                          ]),
-                    ),
+          color: Colors.blue,
+          child: EasyRefresh(
+            onRefresh: _refresh,
+            onLoad: _load,
+            child: CustomScrollView(
+                slivers: _dailyItems.map((daily) {
+              final stories = daily.stories ?? [];
+              return SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                      childCount: stories.length, (context, index) {
+                return Container(
+                  padding: EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: EdgeInsets.fromLTRB(0, 0, 12, 0),
+                          color: Colors.red,
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(stories[index].title ?? "",
+                                    maxLines: 2,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                      color: Colors.black87,
+                                      textBaseline: TextBaseline.alphabetic,
+                                      // 怎么才能底部对齐
+                                      overflow: TextOverflow.ellipsis,
+                                    )),
+                                Container(height: 5),
+                                Text(stories[index].hint ?? "",
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                        color: Colors.black54)),
+                              ]),
+                        ),
+                      ),
+                      Image.network(
+                        stories[index].image(),
+                        width: 80.0,
+                        height: 80.0,
+                      ),
+                    ],
                   ),
-                  Image.network(
-                    stories[index].image(),
-                    width: 80.0,
-                    height: 80.0,
-                  ),
-                ],
-              ),
-            );
-          }));
-        }).toList()),
-      ),
+                );
+              }));
+            }).toList()),
+          )),
     );
   }
 
-  _fetchItems([String? date]) async {
-    Response response;
+  _refresh() async {
     try {
-      if (date != null) {
-        response =
-            await _dio.get('https://news-at.zhihu.com/api/4/news/before/$date');
-      } else {
-        response =
-            await _dio.get('https://news-at.zhihu.com/api/4/news/latest');
-      }
-      final res = DailyHomeModel.fromJson(response.data);
+      final res = await _fetchItems();
       setState(() {
-        if (date == null) {
-          _dailyItems = [res];
-        } else {
-          _dailyItems.add(res);
-        }
+        _dailyItems = [res];
       });
-    } on DioError catch (e) {
-      Fluttertoast.showToast(msg: "请求失败 $e");
+    } catch (e) {
+      Fluttertoast.showToast(msg: "刷新失败 $e");
     }
+  }
+
+  _load() async {
+    try {
+      String date = _dailyItems.last.date ?? "";
+      final res = await _fetchItems(date);
+      setState(() {
+        _dailyItems.add(res);
+      });
+    } catch (e) {
+      Fluttertoast.showToast(msg: "加载失败 $e");
+    }
+  }
+
+  Future<DailyHomeModel> _fetchItems([String? date]) async {
+    // Response response;
+    // try {
+    //   if (date != null) {
+    //     response =
+    //         await _dio.get('https://news-at.zhihu.com/api/4/news/before/$date');
+    //   } else {
+    //     response =
+    //         await _dio.get('https://news-at.zhihu.com/api/4/news/latest');
+    //   }
+    //   final res = DailyHomeModel.fromJson(response.data);
+    //   setState(() {
+    //     if (date == null) {
+    //       _dailyItems = [res];
+    //     } else {
+    //       _dailyItems.add(res);
+    //     }
+    //   });
+    // } on DioError catch (e) {
+    //   Fluttertoast.showToast(msg: "请求失败 $e");
+    // }
+    await Future.delayed(const Duration(milliseconds: 500));
+    String text;
+    if (date != null) {
+      text = await rootBundle.loadString('assets/json/$date.json');
+    } else {
+      text = await rootBundle.loadString('assets/json/today.json');
+    }
+    Map<String, dynamic> data = json.decode(text);
+    final res = DailyHomeModel.fromJson(data);
+    return res;
   }
 }

@@ -30,9 +30,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  dio: ^5.0.2
-  intl: ^0.18.0
-  fluttertoast: ^8.2.1
+  dio: 5.0.2
+  intl: 0.18.0
+  fluttertoast: 8.2.1
+  easy_refresh: 3.3.1
+  
 
 dev_dependencies:
   flutter_test:
@@ -60,6 +62,13 @@ flutter:
   # assets:
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/jsons/today.json
+    - assets/jsons/20230314.json
+    - assets/jsons/20230313.json
+    - assets/jsons/20230312.json
+    - assets/jsons/20230311.json
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
@@ -87,15 +96,15 @@ flutter:
   fonts:
     - family: MiSans
       fonts:
-        - asset: fonts/MiSans-Bold.ttf
-        - asset: fonts/MiSans-Demibold.ttf
-        - asset: fonts/MiSans-ExtraLight.ttf
-        - asset: fonts/MiSans-Heavy.ttf
-        - asset: fonts/MiSans-Light.ttf
-        - asset: fonts/MiSans-Medium.ttf
-        - asset: fonts/MiSans-Normal.ttf
-        - asset: fonts/MiSans-Regular.ttf
-        - asset: fonts/MiSans-Semibold.ttf
-        - asset: fonts/MiSans-Thin.ttf
+        - asset: assets/fonts/MiSans-Bold.ttf
+        - asset: assets/fonts/MiSans-Demibold.ttf
+        - asset: assets/fonts/MiSans-ExtraLight.ttf
+        - asset: assets/fonts/MiSans-Heavy.ttf
+        - asset: assets/fonts/MiSans-Light.ttf
+        - asset: assets/fonts/MiSans-Medium.ttf
+        - asset: assets/fonts/MiSans-Normal.ttf
+        - asset: assets/fonts/MiSans-Regular.ttf
+        - asset: assets/fonts/MiSans-Semibold.ttf
+        - asset: assets/fonts/MiSans-Thin.ttf
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
