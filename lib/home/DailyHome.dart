@@ -8,6 +8,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'dart:convert';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class DailyHome extends StatefulWidget {
   const DailyHome({Key? key}) : super(key: key);
@@ -77,47 +78,71 @@ class _DailyHomeState extends State<DailyHome> {
         ));
   }
 
-  final _bannerPageControl = PageController(initialPage: 1);
+  final _pageViewControler = PageController(initialPage: 0);
+  // final _indicatorControler = PageController(initialPage: 1);
+  bool _resetingPageIndex = false;
   List<TopStories> _topStories = [];
   Widget _buildBanner() {
     return SliverToBoxAdapter(
       child: Container(
-        height: _topStories.isEmpty ? 0 : 300,
-        color: Colors.red,
-        child: EasyRefresh(
-          child: NotificationListener<ScrollNotification>(
-            onNotification: (notifi) {
-              _logger.i(notifi);
-              // if (notifi is ScrollEndNotification) {
-              //   var currentIndex = _bannerPageControl.page?.round();
-              //   _logger.i("PageView stop at $currentIndex");
-              //   if (currentIndex == 0) {
-              //     _logger.i("PageView jumpToPage to 3");
-              //     _bannerPageControl.jumpToPage(3);
-              //     return true;
-              //   } else if (currentIndex == 4) {
-              //     _logger.i("PageView jumpToPage to 1");
-              //     _bannerPageControl.jumpToPage(1);
-              //     return true;
-              //   }
-              // }
-              return false;
-            },
-            child: PageView(
-              physics: const ClampingScrollPhysics(),
-              controller: _bannerPageControl,
-              children: _topStories.map((story) {
-                return FadeInImage.assetNetwork(
-                  placeholder: 'assets/images/placeholder.jpg',
-                  imageErrorBuilder: _imageErrorBuilder,
-                  fit: BoxFit.cover,
-                  image: story.image ?? "",
-                );
-              }).toList(),
-            ),
-          ),
-        ),
-      ),
+          height: _topStories.isEmpty ? 0 : 300,
+          color: Colors.red,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              EasyRefresh(
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: (notifi) {
+                    _logger.i(notifi);
+                    // if (notifi is ScrollEndNotification &&
+                    //     !_resetingPageIndex && _topStories.length >= 4) {
+                    //   var currentIndex = _pageViewControler.page?.round();
+                    //   _logger.i("PageView stop at $currentIndex");
+                    //   if (currentIndex == 0) {
+                    //     _logger.i("PageView jumpToPage to 3");
+                    //     _resetingPageIndex = true;
+                    //     _pageViewControler.jumpToPage(_topStories.length - 2);
+                    //   } else if (currentIndex == 4) {
+                    //     _resetingPageIndex = true;
+                    //     _logger.i("PageView jumpToPage to 1");
+                    //     _pageViewControler.jumpToPage(1);
+                    //   }
+                    //   _resetingPageIndex = false;
+                    // }
+                    return false;
+                  },
+                  child: PageView(
+                    physics: const ClampingScrollPhysics(),
+                    controller: _pageViewControler,
+                    children: _topStories.map((story) {
+                      int storyIndex = _topStories.indexOf(story);
+                      return FadeInImage.assetNetwork(
+                        placeholder: 'assets/images/placeholder.jpg',
+                        imageErrorBuilder: _imageErrorBuilder,
+                        fit: BoxFit.cover,
+                        image: story.image ?? "",
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+              Align(
+                alignment: Alignment.bottomRight,
+                child: Padding(
+                  padding: EdgeInsets.all(12),
+                  child: SmoothPageIndicator(
+                    count: _topStories.length,
+                    controller: _pageViewControler,
+                    effect: ExpandingDotsEffect(
+                        dotHeight: 8,
+                        dotWidth: 8,
+                        spacing: 4,
+                        expansionFactor: 2),
+                  ),
+                ),
+              )
+            ],
+          )),
     );
   }
 
@@ -158,7 +183,8 @@ class _DailyHomeState extends State<DailyHome> {
                 ),
               ),
               ConstrainedBox(
-                constraints: BoxConstraints.tight(const Size(80, 80)),
+                constraints:
+                    const BoxConstraints.tightFor(width: 80, height: 80),
                 child: FadeInImage.assetNetwork(
                     placeholder: 'assets/images/placeholder.jpg',
                     imageErrorBuilder: _imageErrorBuilder,
@@ -179,12 +205,15 @@ class _DailyHomeState extends State<DailyHome> {
 }
 
 extension _DailyHomeStateViewModel on _DailyHomeState {
-  //TODO 验证一下async await的工作机制
+  //TODO 验证一下async await的工作机制 为啥这里总异常呢
   _refresh() async {
     try {
       final res = await _fetchItems();
       setState(() {
         _topStories = res.topStories ?? [];
+        // if (_topStories.length > 1) {
+        //   _topStories = [_topStories.last] + _topStories + [_topStories.first];
+        // }
         _dailyItems = [res];
       });
     } catch (e) {
