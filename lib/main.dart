@@ -20,9 +20,11 @@ class MyApp extends StatelessWidget {
       title: 'zhihudaily',
       home: const DailyHome(),
       theme: ThemeData(
-        platform: TargetPlatform.iOS,
-        fontFamily: 'MiSans',
-      ),
+          platform: TargetPlatform.iOS,
+          fontFamily: 'MiSans',
+          appBarTheme: AppBarTheme(
+            backgroundColor: Colors.white,
+          )),
     );
   }
 }
