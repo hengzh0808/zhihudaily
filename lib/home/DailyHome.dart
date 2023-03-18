@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:logger/logger.dart';
+import 'package:zhihudaily/detail/DailyStoryDetail.dart';
 import 'package:zhihudaily/home/DailyHomeBanner.dart';
 import 'package:zhihudaily/home/DailyHomeModel.dart';
 import 'package:dio/dio.dart';
@@ -19,145 +20,17 @@ class DailyHome extends StatefulWidget {
 }
 
 class _DailyHomeState extends State<DailyHome> {
-  var _weekDay = "", _month = "";
+  var _weekDay = "", _date = "";
+  // Dart不支持yyyyMMdd如此格式
+  final _responseDateFormat = DateFormat('yyyy-MM-dd'),
+      _cardDateFormat = DateFormat('M月d日');
   final Dio _dio = Dio();
   //TODO: late关键字
   final EasyRefreshController _controller = EasyRefreshController(
       controlFinishLoad: true, controlFinishRefresh: true);
   final _logger = Logger(printer: SimplePrinter());
-
-  @override
-  void initState() {
-    super.initState();
-    initializeDateFormatting();
-    setState(() {
-      _weekDay = DateFormat('EEEE', "zh_CN").format(DateTime.now());
-      _month = DateFormat('MMMM', "zh_CN").format(DateTime.now());
-    });
-    _refresh();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        titleSpacing: 0,
-        title: Row(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
-              child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(_weekDay,
-                        style: const TextStyle(
-                            fontSize: 20, color: Colors.black87)),
-                    Text(_month,
-                        style: const TextStyle(
-                            fontSize: 15,
-                            color: Colors.black54,
-                            fontWeight: FontWeight.bold)),
-                  ]),
-            ),
-            Container(
-              width: 1.5,
-              height: kToolbarHeight - 20,
-              color: Colors.black.withAlpha(25),
-            )
-          ],
-        ),
-      ),
-      body: Container(
-        child: EasyRefresh(
-          onRefresh: _refresh,
-          onLoad: _load,
-          child: CustomScrollView(
-            slivers: () {
-                  if (_dailyItems.isNotEmpty) {
-                    return <Widget>[
-                      SliverToBoxAdapter(
-                        child: Container(
-                          height: 350,
-                          child: DailyHomeBanner(
-                            topStories: _dailyItems.first.topStories ?? [],
-                          ),
-                        ),
-                      )
-                    ];
-                  }
-                  return <Widget>[];
-                }() +
-                _buildStoryCard(),
-          ),
-        ),
-      ),
-    );
-  }
-
   List<DailyHomeModel> _dailyItems = [];
-  List<SliverList> _buildStoryCard() {
-    return _dailyItems.map((daily) {
-      final stories = daily.stories ?? [];
-      return SliverList(
-          delegate: SliverChildBuilderDelegate(childCount: stories.length,
-              (context, index) {
-        return Container(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.fromLTRB(0, 0, 12, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        stories[index].title ?? "",
-                        maxLines: 2,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: Colors.black87,
-                          textBaseline: TextBaseline.alphabetic,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Container(height: 5),
-                      Text(
-                        stories[index].hint ?? "",
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                          color: Colors.black54,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              ConstrainedBox(
-                constraints:
-                    const BoxConstraints.tightFor(width: 80, height: 80),
-                child: FadeInImage.assetNetwork(
-                  placeholder: 'assets/images/placeholder.jpg',
-                  imageErrorBuilder: _imageErrorBuilder,
-                  fit: BoxFit.cover,
-                  image: stories[index].image(),
-                ),
-              ),
-            ],
-          ),
-        );
-      }));
-    }).toList();
-  }
 
-  Image _imageErrorBuilder(context, error, stackTrace) {
-    _logger.e(error);
-    return Image.asset('assets/images/placeholder.jpg', fit: BoxFit.cover);
-  }
-
-  //TODO 验证一下async await的工作机制 为啥这里总异常呢
   _refresh() async {
     try {
       final res = await _fetchItems();
@@ -190,36 +63,222 @@ class _DailyHomeState extends State<DailyHome> {
   }
 
   Future<DailyHomeModel> _fetchItems([String? date]) async {
-    // Response response;
-    // try {
-    //   if (date != null) {
-    //     response =
-    //         await _dio.get('https://news-at.zhihu.com/api/4/news/before/$date');
-    //   } else {
-    //     response =
-    //         await _dio.get('https://news-at.zhihu.com/api/4/news/latest');
-    //   }
-    //   final res = DailyHomeModel.fromJson(response.data);
-    //   setState(() {
-    //     if (date == null) {
-    //       _dailyItems = [res];
-    //     } else {
-    //       _dailyItems.add(res);
-    //     }
-    //   });
-    // } on DioError catch (e) {
-    //   Fluttertoast.showToast(msg: "请求失败 $e");
-    // }
-    await Future.delayed(const Duration(milliseconds: 500));
-    String text;
+    Response response;
     if (date != null) {
-      text = await rootBundle.loadString('assets/jsons/$date.json');
+      response = await _dio.get(
+        'https://news-at.zhihu.com/api/7/news/before/$date',
+        options: Options(
+          headers: {'authorization': 'Bearer rQ-s-gjcQdqFf1h8jrkFGQ'},
+        ),
+      );
     } else {
-      text = await rootBundle.loadString('assets/jsons/today.json');
+      response = await _dio.get(
+        'https://news-at.zhihu.com/api/7/stories/latest',
+        options: Options(
+          headers: {'authorization': 'Bearer rQ-s-gjcQdqFf1h8jrkFGQ'},
+        ),
+      );
     }
-    Map<String, dynamic> data = json.decode(text);
-    _logger.v(data);
-    final res = DailyHomeModel.fromJson(data);
+    final res = DailyHomeModel.fromJson(response.data);
     return res;
+    // await Future.delayed(const Duration(milliseconds: 500));
+    // String text;
+    // if (date != null) {
+    //   text = await rootBundle.loadString('assets/jsons/$date.json');
+    // } else {
+    //   text = await rootBundle.loadString('assets/jsons/today.json');
+    // }
+    // Map<String, dynamic> data = json.decode(text);
+    // _logger.v(data);
+    // final res = DailyHomeModel.fromJson(data);
+    // return res;
+  }
+
+  void _onTapStory(Stories story) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) {
+        return DailyStoryDetail(story: story);
+      }),
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    initializeDateFormatting();
+    setState(() {
+      _weekDay = DateFormat('EEEE', "zh_CN").format(DateTime.now());
+      _date = DateFormat('M月d日', "zh_CN").format(DateTime.now());
+    });
+    _refresh();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        titleSpacing: 0,
+        title: Row(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+              child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(_weekDay,
+                        style: const TextStyle(
+                            fontSize: 20, color: Colors.black87)),
+                    Text(_date,
+                        style: const TextStyle(
+                            fontSize: 15,
+                            color: Colors.black54,
+                            fontWeight: FontWeight.bold)),
+                  ]),
+            ),
+            Container(
+              width: 1.5,
+              height: kToolbarHeight - 20,
+              color: Colors.black.withAlpha(25),
+            )
+          ],
+        ),
+      ),
+      body: Container(
+        child: EasyRefresh(
+          onRefresh: _refresh,
+          onLoad: _load,
+          child: CustomScrollView(
+            slivers: () {
+                  if (_dailyItems.isNotEmpty) {
+                    return <Widget>[
+                      SliverToBoxAdapter(
+                        child: LayoutBuilder(builder: (context, constraints) {
+                          return Container(
+                            height: constraints.maxWidth,
+                            child: DailyHomeBanner(
+                              topStories: _dailyItems.first.topStories ?? [],
+                            ),
+                          );
+                        }),
+                      )
+                    ];
+                  }
+                  return <Widget>[];
+                }() +
+                _buildDailyList(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildDailyList() {
+    return () {
+      List<Widget> res = [];
+      for (int i = 0; i < _dailyItems.length; i++) {
+        final daily = _dailyItems[i];
+        if (i != 0) {
+          var inputDate = daily.date;
+          if (inputDate != null && inputDate.length == 8) {
+            String newInput =
+                '${inputDate.substring(0, 4)}-${inputDate.substring(4, 6)}-${inputDate.substring(6, 8)}';
+            DateTime date = _responseDateFormat.parse(newInput);
+            String formatDate = _cardDateFormat.format(date);
+            res.add(
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 30,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+                        child: Text(
+                          formatDate,
+                          style: const TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                      Expanded(
+                        child: Container(
+                          height: .5,
+                          color: Colors.grey,
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
+        }
+        final stories = daily.stories ?? [];
+        res.add(SliverList(
+          delegate: SliverChildBuilderDelegate(childCount: stories.length,
+              (context, index) {
+            final story = stories[index];
+            return GestureDetector(
+              onTap: () {
+                _onTapStory(story);
+              },
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.fromLTRB(0, 0, 12, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              story.title ?? "",
+                              maxLines: 2,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 18,
+                                color: Colors.black87,
+                                textBaseline: TextBaseline.alphabetic,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Container(height: 5),
+                            Text(
+                              story.hint ?? "",
+                              style: const TextStyle(
+                                fontSize: 15,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    ConstrainedBox(
+                      constraints:
+                          const BoxConstraints.tightFor(width: 80, height: 80),
+                      child: FadeInImage.assetNetwork(
+                        placeholder: 'assets/images/placeholder.jpg',
+                        imageErrorBuilder: _imageErrorBuilder,
+                        fit: BoxFit.cover,
+                        image: stories[index].image(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+        ));
+      }
+      return res;
+    }();
+  }
+
+  Image _imageErrorBuilder(context, error, stackTrace) {
+    _logger.e(error);
+    return Image.asset('assets/images/placeholder.jpg', fit: BoxFit.cover);
   }
 }
