@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:zhihudaily/home/DailyHome.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import '../home/DailyHome.dart';
 
 void main() {
   // debugPaintSizeEnabled = true;

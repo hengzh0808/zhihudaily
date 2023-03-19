@@ -1,16 +1,17 @@
+import 'dart:ffi';
+
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:logger/logger.dart';
-import 'package:zhihudaily/detail/DailyStoryDetail.dart';
-import 'package:zhihudaily/home/DailyHomeBanner.dart';
-import 'package:zhihudaily/home/DailyHomeModel.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'dart:convert';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+
+import '../base/dio.dart';
+import '../detail/DailyStoryDetail.dart';
+import '../home/DailyHomeBanner.dart';
+import '../home/DailyHomeModel.dart';
 
 class DailyHome extends StatefulWidget {
   const DailyHome({Key? key}) : super(key: key);
@@ -24,7 +25,6 @@ class _DailyHomeState extends State<DailyHome> {
   // Dart不支持yyyyMMdd如此格式
   final _responseDateFormat = DateFormat('yyyy-MM-dd'),
       _cardDateFormat = DateFormat('M月d日');
-  final Dio _dio = Dio();
   //TODO: late关键字
   final EasyRefreshController _controller = EasyRefreshController(
       controlFinishLoad: true, controlFinishRefresh: true);
@@ -65,14 +65,14 @@ class _DailyHomeState extends State<DailyHome> {
   Future<DailyHomeModel> _fetchItems([String? date]) async {
     Response response;
     if (date != null) {
-      response = await _dio.get(
+      response = await dioBiger.get(
         'https://news-at.zhihu.com/api/7/news/before/$date',
         options: Options(
           headers: {'authorization': 'Bearer rQ-s-gjcQdqFf1h8jrkFGQ'},
         ),
       );
     } else {
-      response = await _dio.get(
+      response = await dioBiger.get(
         'https://news-at.zhihu.com/api/7/stories/latest',
         options: Options(
           headers: {'authorization': 'Bearer rQ-s-gjcQdqFf1h8jrkFGQ'},
@@ -94,11 +94,13 @@ class _DailyHomeState extends State<DailyHome> {
     // return res;
   }
 
-  void _onTapStory(Stories story) {
+  void _onTapStory(int id) {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) {
-        return DailyStoryDetail(story: story);
+        return DailyStoryDetail(
+          id: id,
+        );
       }),
     );
   }
@@ -158,6 +160,7 @@ class _DailyHomeState extends State<DailyHome> {
                             height: constraints.maxWidth,
                             child: DailyHomeBanner(
                               topStories: _dailyItems.first.topStories ?? [],
+                              onTap: (topStory) {},
                             ),
                           );
                         }),
@@ -221,7 +224,7 @@ class _DailyHomeState extends State<DailyHome> {
             final story = stories[index];
             return GestureDetector(
               onTap: () {
-                _onTapStory(story);
+                _onTapStory(story.id ?? 0);
               },
               child: Container(
                 padding: const EdgeInsets.all(12),

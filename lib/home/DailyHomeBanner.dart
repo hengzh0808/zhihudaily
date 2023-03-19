@@ -8,11 +8,14 @@ import 'package:logger/logger.dart';
 final _logger = Logger(printer: SimplePrinter());
 
 class DailyHomeBanner extends StatefulWidget {
-  const DailyHomeBanner({Key? key, required this.topStories}) : super(key: key);
+  const DailyHomeBanner({Key? key, required this.topStories, this.onTap})
+      : super(key: key);
   final List<TopStories> topStories;
+  final void Function(TopStories)? onTap;
 
   @override
-  State<DailyHomeBanner> createState() => _DailyHomeBannerState(topStories);
+  State<DailyHomeBanner> createState() =>
+      _DailyHomeBannerState(topStories, onTap);
 }
 
 class _PageController1 extends PageController {
@@ -27,8 +30,9 @@ class _PageController1 extends PageController {
 }
 
 class _DailyHomeBannerState extends State<DailyHomeBanner> {
-  _DailyHomeBannerState(this._topStories);
-  final List<TopStories> _topStories;
+  _DailyHomeBannerState(this.topStories, this.onTap);
+  final List<TopStories> topStories;
+  final void Function(TopStories)? onTap;
   final _pageViewControler = _PageController1(0);
   final _pageViewControler1 = _PageController1(0);
 
@@ -42,55 +46,61 @@ class _DailyHomeBannerState extends State<DailyHomeBanner> {
           physics: const ClampingScrollPhysics(),
           controller: _pageViewControler,
           children: () {
-            var subWidgets = _topStories.map((story) {
-              int storyIndex = _topStories.indexOf(story);
-              return Stack(
-                fit: StackFit.expand,
-                children: [
-                  FadeInImage.assetNetwork(
-                    placeholder: 'assets/images/placeholder.jpg',
-                    imageErrorBuilder: _imageErrorBuilder,
-                    fit: BoxFit.cover,
-                    image: story.image ?? "",
-                  ),
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: Padding(
-                      padding: EdgeInsets.all(12),
-                      child: Text(
-                        "$storyIndex",
-                        style: TextStyle(fontSize: 20, color: Colors.white),
+            var subWidgets = topStories.map((story) {
+              int storyIndex = topStories.indexOf(story);
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  onTap?.call(story);
+                },
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    FadeInImage.assetNetwork(
+                      placeholder: 'assets/images/placeholder.jpg',
+                      imageErrorBuilder: _imageErrorBuilder,
+                      fit: BoxFit.cover,
+                      image: story.image ?? "",
+                    ),
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: Padding(
+                        padding: EdgeInsets.all(12),
+                        child: Text(
+                          "$storyIndex",
+                          style: TextStyle(fontSize: 20, color: Colors.white),
+                        ),
                       ),
                     ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(12, 12, 12, 24),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          story.title ?? "",
-                          maxLines: 2,
-                          style: TextStyle(
-                            fontSize: 20,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            overflow: TextOverflow.ellipsis,
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(12, 12, 12, 24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            story.title ?? "",
+                            maxLines: 2,
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                        Text(
-                          story.hint ?? "",
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: Colors.white,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        )
-                      ],
+                          Text(
+                            story.hint ?? "",
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.white,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          )
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               );
             }).toList();
             if (subWidgets.length > 1) {
@@ -106,7 +116,7 @@ class _DailyHomeBannerState extends State<DailyHomeBanner> {
         child: Padding(
           padding: EdgeInsets.all(12),
           child: _BannerIndicator(
-            count: _topStories.length,
+            count: topStories.length,
             controller: _pageViewControler,
             effect: const ExpandingDotsEffect(
                 dotHeight: 8,
@@ -125,14 +135,14 @@ class _DailyHomeBannerState extends State<DailyHomeBanner> {
   bool _scrollNotification(notifi) {
     if (notifi is ScrollEndNotification &&
         !_resetingPageIndex &&
-        _topStories.length > 1) {
+        topStories.length > 1) {
       var currentIndex = _pageViewControler.page?.round();
       _logger.i("PageView stop at $currentIndex");
       if (currentIndex == 0) {
         _logger.i("PageView jumpToPage to 3");
         _resetingPageIndex = true;
-        _pageViewControler.jumpToPage(_topStories.length);
-      } else if (currentIndex == _topStories.length + 1) {
+        _pageViewControler.jumpToPage(topStories.length);
+      } else if (currentIndex == topStories.length + 1) {
         _resetingPageIndex = true;
         _logger.i("PageView jumpToPage to 1");
         _pageViewControler.jumpToPage(1);
