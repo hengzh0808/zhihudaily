@@ -24,19 +24,17 @@ class _DailyStoryDetailState extends State<DailyStoryDetail> {
   final int id;
   DailyStoryDetailModel? _storyDetail;
   late final _controller = WebViewController()
-    ..setNavigationDelegate(NavigationDelegate(
-      onPageFinished: (url) => _onPageFinished(url),
-      onWebResourceError: (error) => _onWebResourceError(error),
-    ))
-    ..setJavaScriptMode(JavaScriptMode.unrestricted);
-  double _webHeight = 0;
+    ..setJavaScriptMode(JavaScriptMode.unrestricted)
+    ..setUserAgent('ZhihuHybrid');
   bool _webFinish = false;
+  double _webProgress = 0.0;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     _loadStory();
+    _setWebDelegate();
   }
 
   void _loadStory() async {
@@ -60,20 +58,24 @@ class _DailyStoryDetailState extends State<DailyStoryDetail> {
     }
   }
 
-  void _onPageFinished(String url) async {
-    // _controller.runJavaScript("document.getElementsByClassName('img-place-holder')[0].style.display = 'none'");
-    _controller.runJavaScript(
-        "document.getElementsByClassName('ZhihuDailyOIABanner')[0].style.display = 'none'");
-    var scrollHeight = await _controller.runJavaScriptReturningResult(
-        'document.scrollingElement.scrollHeight') as int;
-    setState(() {
-      _webHeight = scrollHeight.toDouble();
-      _webFinish = true;
-    });
-  }
-
-  void _onWebResourceError(error) {
-    Fluttertoast.showToast(msg: "加载失败 $error");
+  void _setWebDelegate() {
+    _controller.setNavigationDelegate(NavigationDelegate(
+      onPageFinished: (url) {
+        // _controller.runJavaScript("document.getElementsByClassName('img-place-holder')[0].style.display = 'none'");
+        // var scrollHeight = await _controller.runJavaScriptReturningResult('document.scrollingElement.scrollHeight') as int;
+        setState(() {
+          _webFinish = true;
+        });
+      },
+      onWebResourceError: (error) {
+        Fluttertoast.showToast(msg: "加载失败 $error");
+      },
+      onProgress: (progress) {
+        setState(() {
+          _webProgress = progress / 100.0;
+        });
+      },
+    ));
   }
 
   @override
@@ -82,24 +84,13 @@ class _DailyStoryDetailState extends State<DailyStoryDetail> {
       body: LayoutBuilder(builder: (context, constraints) {
         return Stack(
           children: [
-            CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Container(
-                    height: max(constraints.maxHeight, _webHeight),
-                    child: WebViewWidget(controller: _controller),
-                  ),
-                )
-              ],
-            ),
+            WebViewWidget(controller: _controller),
             Visibility(
               visible: !_webFinish,
               child: Container(
-                color: Colors.red,
                 child: Center(
-                  child: Text(
-                    "加载中",
-                    style: TextStyle(fontSize: 20),
+                  child: CircularProgressIndicator(
+                    value: _webProgress,
                   ),
                 ),
               ),
