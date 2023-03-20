@@ -22,10 +22,8 @@ class DailyHome extends StatefulWidget {
 
 class _DailyHomeState extends State<DailyHome> {
   var _weekDay = "", _date = "";
-  // Dart不支持yyyyMMdd如此格式
   final _responseDateFormat = DateFormat('yyyy-MM-dd'),
       _cardDateFormat = DateFormat('M月d日');
-  //TODO: late关键字
   final EasyRefreshController _controller = EasyRefreshController(
       controlFinishLoad: true, controlFinishRefresh: true);
   final _logger = Logger(printer: SimplePrinter());
@@ -65,19 +63,11 @@ class _DailyHomeState extends State<DailyHome> {
   Future<DailyDateStoriesModel> _fetchItems([String? date]) async {
     Response response;
     if (date != null) {
-      response = await dioBiger.get(
-        'https://news-at.zhihu.com/api/7/news/before/$date',
-        options: Options(
-          headers: {'authorization': 'Bearer rQ-s-gjcQdqFf1h8jrkFGQ'},
-        ),
-      );
+      response = await dioBiger
+          .get('https://news-at.zhihu.com/api/7/news/before/$date');
     } else {
-      response = await dioBiger.get(
-        'https://news-at.zhihu.com/api/7/stories/latest',
-        options: Options(
-          headers: {'authorization': 'Bearer rQ-s-gjcQdqFf1h8jrkFGQ'},
-        ),
-      );
+      response =
+          await dioBiger.get('https://news-at.zhihu.com/api/7/stories/latest');
     }
     final res = DailyDateStoriesModel.fromJson(response.data);
     return res;
