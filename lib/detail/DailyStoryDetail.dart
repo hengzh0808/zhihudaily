@@ -5,8 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:zhihudaily/base/ExpandGesture/expand_widgets.dart';
 
-import '../base/dio.dart';
+import '../base/DioBiger.dart';
 import '../Model/DailyStoryDetailModel.dart';
 import '../Model/DailyStoryExtraInfo.dart';
 
@@ -59,7 +60,7 @@ class _DailyStoryDetailState extends State<DailyStoryDetail> {
 
     try {
       Response response =
-          await dioBiger.get('https://news-at.zhihu.com/api/7/story/$id');
+          await dioBiger.get('https://news-at.zhihu.com/api/7/story-extra/$id');
       final storyExtraInfo = DailyStoryExtraInfo.fromJson(response.data);
       setState(() {
         _storyExtraInfo = storyExtraInfo;
@@ -137,39 +138,12 @@ class _DailyStoryDetailState extends State<DailyStoryDetail> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // IconButton(
-                        //   padding: EdgeInsets.all(0),
-                        //   onPressed: () {},
-                        //   icon: Icon(
-                        //     Icons.chat_bubble_outline,
-                        //     color: Color(0xff1a1a1a),
-                        //   ),
-                        // ),
-                        // IconButton(
-                        //   padding: EdgeInsets.all(0),
-                        //   onPressed: () {},
-                        //   icon: Icon(
-                        //     Icons.thumb_up_outlined,
-                        //     color: Color(0xff1a1a1a),
-                        //   ),
-                        // ),
-                        // IconButton(
-                        //   padding: EdgeInsets.all(0),
-                        //   onPressed: () {},
-                        //   icon: Icon(
-                        //     Icons.favorite_outline,
-                        //     color: Color(0xff1a1a1a),
-                        //   ),
-                        // ),
-                        // IconButton(
-                        //   padding: EdgeInsets.all(0),
-                        //   onPressed: () {},
-                        //   icon: Icon(
-                        //     Icons.ios_share_outlined,
-                        //     color: Color(0xff1a1a1a),
-                        //   ),
-                        // )
-                        GestureDetector(
+                        // GestureDetector(
+                        ExpandGestureDetector(
+                          expandArea: EdgeInsets.all(100),
+                          onTap: () {
+                            Fluttertoast.showToast(msg: '点击了');
+                          },
                           child: Container(
                             color: Colors.red,
                             child: Icon(
@@ -179,12 +153,15 @@ class _DailyStoryDetailState extends State<DailyStoryDetail> {
                           ),
                         ),
                         Expanded(
-                          child: Container(
-                            color: Colors.pink,
-                            child: Align(
-                              alignment: Alignment.topLeft,
-                              child: Text("123"),
-                            ),
+                          child: Align(
+                            alignment: Alignment.topLeft,
+                            child: () {
+                              int? count = _storyExtraInfo?.count?.comments;
+                              if (count != null && count > 0) {
+                                return Text('$count');
+                              }
+                              return Text('');
+                            }(),
                           ),
                         ),
                         Container(
@@ -195,8 +172,15 @@ class _DailyStoryDetailState extends State<DailyStoryDetail> {
                           ),
                         ),
                         Expanded(
-                          child: Container(
-                            color: Colors.pink,
+                          child: Align(
+                            alignment: Alignment.topLeft,
+                            child: () {
+                              int? count = _storyExtraInfo?.count?.likes;
+                              if (count != null && count > 0) {
+                                return Text('$count');
+                              }
+                              return Text('');
+                            }(),
                           ),
                         ),
                         Container(

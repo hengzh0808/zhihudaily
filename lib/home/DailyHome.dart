@@ -8,7 +8,7 @@ import 'package:logger/logger.dart';
 import 'package:dio/dio.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
-import '../base/dio.dart';
+import '../base/DioBiger.dart';
 import '../detail/DailyStoryDetail.dart';
 import '../home/DailyHomeBanner.dart';
 import '../Model/DailyDateStoriesModel.dart';
