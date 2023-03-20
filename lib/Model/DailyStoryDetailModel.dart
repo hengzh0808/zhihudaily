@@ -1,3 +1,5 @@
+
+
 class DailyStoryDetailModel {
   String? body;
   String? imageHue;

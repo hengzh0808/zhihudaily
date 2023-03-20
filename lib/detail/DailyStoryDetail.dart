@@ -1,4 +1,3 @@
-import 'dart:ffi';
 import 'dart:math';
 
 import 'package:dio/dio.dart';
@@ -6,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:webview_flutter_platform_interface/src/platform_navigation_delegate.dart';
 
 import '../base/dio.dart';
-import '../detail/DailyStoryDetailModel.dart';
+import '../Model/DailyStoryDetailModel.dart';
+import '../Model/DailyStoryExtraInfo.dart';
 
 class DailyStoryDetail extends StatefulWidget {
   const DailyStoryDetail({Key? key, required this.id}) : super(key: key);
@@ -23,6 +22,7 @@ class _DailyStoryDetailState extends State<DailyStoryDetail> {
   _DailyStoryDetailState(this.id);
   final int id;
   DailyStoryDetailModel? _storyDetail;
+  DailyStoryExtraInfo? _storyExtraInfo;
   late final _controller = WebViewController()
     ..setJavaScriptMode(JavaScriptMode.unrestricted)
     ..setUserAgent('ZhihuHybrid');
@@ -56,6 +56,15 @@ class _DailyStoryDetailState extends State<DailyStoryDetail> {
     } catch (e) {
       Fluttertoast.showToast(msg: "加载失败 $e");
     }
+
+    try {
+      Response response =
+          await dioBiger.get('https://news-at.zhihu.com/api/7/story/$id');
+      final storyExtraInfo = DailyStoryExtraInfo.fromJson(response.data);
+      setState(() {
+        _storyExtraInfo = storyExtraInfo;
+      });
+    } catch (e) {}
   }
 
   void _setWebDelegate() {
@@ -81,6 +90,7 @@ class _DailyStoryDetailState extends State<DailyStoryDetail> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xfff6f6f6),
       body: LayoutBuilder(builder: (context, constraints) {
         return Stack(
           children: [
@@ -101,7 +111,6 @@ class _DailyStoryDetailState extends State<DailyStoryDetail> {
       bottomNavigationBar: BottomAppBar(
         child: Container(
           height: 50,
-          color: Color(0xfff6f6f6),
           child: Row(
             children: [
               IconButton(
@@ -122,42 +131,96 @@ class _DailyStoryDetailState extends State<DailyStoryDetail> {
                 ),
               ),
               Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    IconButton(
-                      padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
-                      onPressed: () {},
-                      icon: Icon(
-                        Icons.chat_bubble_outline,
-                        color: Color(0xff1a1a1a),
-                      ),
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(12, 0, 12, 0),
+                  child: IntrinsicHeight(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // IconButton(
+                        //   padding: EdgeInsets.all(0),
+                        //   onPressed: () {},
+                        //   icon: Icon(
+                        //     Icons.chat_bubble_outline,
+                        //     color: Color(0xff1a1a1a),
+                        //   ),
+                        // ),
+                        // IconButton(
+                        //   padding: EdgeInsets.all(0),
+                        //   onPressed: () {},
+                        //   icon: Icon(
+                        //     Icons.thumb_up_outlined,
+                        //     color: Color(0xff1a1a1a),
+                        //   ),
+                        // ),
+                        // IconButton(
+                        //   padding: EdgeInsets.all(0),
+                        //   onPressed: () {},
+                        //   icon: Icon(
+                        //     Icons.favorite_outline,
+                        //     color: Color(0xff1a1a1a),
+                        //   ),
+                        // ),
+                        // IconButton(
+                        //   padding: EdgeInsets.all(0),
+                        //   onPressed: () {},
+                        //   icon: Icon(
+                        //     Icons.ios_share_outlined,
+                        //     color: Color(0xff1a1a1a),
+                        //   ),
+                        // )
+                        GestureDetector(
+                          child: Container(
+                            color: Colors.red,
+                            child: Icon(
+                              Icons.chat_bubble_outline,
+                              color: Color(0xff1a1a1a),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Container(
+                            color: Colors.pink,
+                            child: Align(
+                              alignment: Alignment.topLeft,
+                              child: Text("123"),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          color: Colors.green,
+                          child: Icon(
+                            Icons.thumb_up_outlined,
+                            color: Color(0xff1a1a1a),
+                          ),
+                        ),
+                        Expanded(
+                          child: Container(
+                            color: Colors.pink,
+                          ),
+                        ),
+                        Container(
+                          color: Colors.orange,
+                          child: Icon(
+                            Icons.favorite_outline,
+                            color: Color(0xff1a1a1a),
+                          ),
+                        ),
+                        Expanded(
+                          child: Container(
+                            color: Colors.pink,
+                          ),
+                        ),
+                        Container(
+                          color: Colors.blue,
+                          child: Icon(
+                            Icons.ios_share_outlined,
+                            color: Color(0xff1a1a1a),
+                          ),
+                        )
+                      ],
                     ),
-                    IconButton(
-                      padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
-                      onPressed: () {},
-                      icon: Icon(
-                        Icons.thumb_up_outlined,
-                        color: Color(0xff1a1a1a),
-                      ),
-                    ),
-                    IconButton(
-                      padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
-                      onPressed: () {},
-                      icon: Icon(
-                        Icons.favorite_outline,
-                        color: Color(0xff1a1a1a),
-                      ),
-                    ),
-                    IconButton(
-                      padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
-                      onPressed: () {},
-                      icon: Icon(
-                        Icons.ios_share_outlined,
-                        color: Color(0xff1a1a1a),
-                      ),
-                    )
-                  ],
+                  ),
                 ),
               )
             ],

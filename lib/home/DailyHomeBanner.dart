@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'DailyHomeModel.dart';
+import '../Model/DailyDateStoriesModel.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:logger/logger.dart';
 

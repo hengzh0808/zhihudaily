@@ -1,11 +1,11 @@
-class DailyHomeModel {
+class DailyDateStoriesModel {
   String? date;
   List<Stories>? stories;
   List<TopStories>? topStories;
 
-  DailyHomeModel({this.date, this.stories, this.topStories});
+  DailyDateStoriesModel({this.date, this.stories, this.topStories});
 
-  DailyHomeModel.fromJson(Map<String, dynamic> json) {
+  DailyDateStoriesModel.fromJson(Map<String, dynamic> json) {
     date = json['date'];
     if (json['stories'] != null) {
       stories = <Stories>[];

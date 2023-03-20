@@ -11,7 +11,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import '../base/dio.dart';
 import '../detail/DailyStoryDetail.dart';
 import '../home/DailyHomeBanner.dart';
-import '../home/DailyHomeModel.dart';
+import '../Model/DailyDateStoriesModel.dart';
 
 class DailyHome extends StatefulWidget {
   const DailyHome({Key? key}) : super(key: key);
@@ -29,7 +29,7 @@ class _DailyHomeState extends State<DailyHome> {
   final EasyRefreshController _controller = EasyRefreshController(
       controlFinishLoad: true, controlFinishRefresh: true);
   final _logger = Logger(printer: SimplePrinter());
-  List<DailyHomeModel> _dailyItems = [];
+  List<DailyDateStoriesModel> _dailyItems = [];
 
   _refresh() async {
     try {
@@ -62,7 +62,7 @@ class _DailyHomeState extends State<DailyHome> {
     }
   }
 
-  Future<DailyHomeModel> _fetchItems([String? date]) async {
+  Future<DailyDateStoriesModel> _fetchItems([String? date]) async {
     Response response;
     if (date != null) {
       response = await dioBiger.get(
@@ -79,7 +79,7 @@ class _DailyHomeState extends State<DailyHome> {
         ),
       );
     }
-    final res = DailyHomeModel.fromJson(response.data);
+    final res = DailyDateStoriesModel.fromJson(response.data);
     return res;
     // await Future.delayed(const Duration(milliseconds: 500));
     // String text;
@@ -90,19 +90,21 @@ class _DailyHomeState extends State<DailyHome> {
     // }
     // Map<String, dynamic> data = json.decode(text);
     // _logger.v(data);
-    // final res = DailyHomeModel.fromJson(data);
+    // final res = DailyDateStoriesModel.fromJson(data);
     // return res;
   }
 
-  void _onTapStory(int id) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) {
-        return DailyStoryDetail(
-          id: id,
-        );
-      }),
-    );
+  void _onTapStory(int? id) {
+    if (id != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) {
+          return DailyStoryDetail(
+            id: id,
+          );
+        }),
+      );
+    }
   }
 
   @override
@@ -160,7 +162,7 @@ class _DailyHomeState extends State<DailyHome> {
                             height: constraints.maxWidth,
                             child: DailyHomeBanner(
                               topStories: _dailyItems.first.topStories ?? [],
-                              onTap: (topStory) {},
+                              onTap: (story) => _onTapStory(story.id),
                             ),
                           );
                         }),
@@ -224,7 +226,7 @@ class _DailyHomeState extends State<DailyHome> {
             final story = stories[index];
             return GestureDetector(
               onTap: () {
-                _onTapStory(story.id ?? 0);
+                _onTapStory(story.id);
               },
               child: Container(
                 padding: const EdgeInsets.all(12),
