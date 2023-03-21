@@ -91,18 +91,16 @@ class _DailyStoryDetailState extends State<DailyStoryDetail> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xfff6f6f6),
+      backgroundColor: const Color(0xfff6f6f6),
       body: LayoutBuilder(builder: (context, constraints) {
         return Stack(
           children: [
             WebViewWidget(controller: _controller),
             Visibility(
               visible: !_webFinish,
-              child: Container(
-                child: Center(
-                  child: CircularProgressIndicator(
-                    value: _webProgress,
-                  ),
+              child: Center(
+                child: CircularProgressIndicator(
+                  value: _webProgress,
                 ),
               ),
             )
@@ -115,25 +113,25 @@ class _DailyStoryDetailState extends State<DailyStoryDetail> {
           child: Row(
             children: [
               IconButton(
-                padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                icon: Icon(
+                icon: const Icon(
                   Icons.arrow_back_ios,
                   color: Color(0xff1a1a1a),
                 ),
               ),
               Padding(
-                padding: EdgeInsets.fromLTRB(0, 12, 0, 12),
+                padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
                 child: Container(
                   width: 0.5,
-                  color: Color(0xffd3d3d3),
+                  color: const Color(0xffd3d3d3),
                 ),
               ),
               Expanded(
                 child: Padding(
-                  padding: EdgeInsets.fromLTRB(12, 0, 12, 0),
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
                   child: IntrinsicHeight(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -142,57 +140,54 @@ class _DailyStoryDetailState extends State<DailyStoryDetail> {
                         Stack(
                           alignment: Alignment.topRight,
                           children: [
-                            ExpandGestureDetector(
-                              expandArea: EdgeInsets.all(0),
-                              onTap: () {
-                                Fluttertoast.showToast(msg: '点击了');
-                              },
-                              child: Container(
-                                color: Colors.red,
-                                child: Icon(
-                                  Icons.chat_bubble_outline,
-                                  color: Color(0xff1a1a1a),
-                                ),
-                              ),
+                            const Icon(
+                              Icons.chat_bubble_outline,
+                              color: Color(0xff1a1a1a),
                             ),
                             SizedOverflowBox(
-                              size: Size(0, 0),
                               alignment: Alignment.topLeft,
+                              size: const Size(0, 10),
                               child: () {
                                 int? count = _storyExtraInfo?.count?.comments;
                                 if (count != null && count > 0) {
                                   return Text(
                                     '$count',
-                                    style: TextStyle(
-                                        fontSize: 10,
-                                        backgroundColor: Colors.green),
+                                    style: const TextStyle(fontSize: 10),
                                   );
                                 }
-                                return Text('');
                               }(),
                             )
                           ],
                         ),
-                        Container(
-                          color: Colors.green,
-                          child: Icon(
-                            Icons.thumb_up_outlined,
-                            color: Color(0xff1a1a1a),
-                          ),
+                        Stack(
+                          alignment: Alignment.topRight,
+                          children: [
+                            const Icon(
+                              Icons.thumb_up_outlined,
+                              color: Color(0xff1a1a1a),
+                            ),
+                            SizedOverflowBox(
+                              alignment: Alignment.topLeft,
+                              size: const Size(0, 10),
+                              child: () {
+                                int? count = _storyExtraInfo?.count?.likes;
+                                if (count != null && count > 0) {
+                                  return Text(
+                                    '$count',
+                                    style: const TextStyle(fontSize: 10),
+                                  );
+                                }
+                              }(),
+                            )
+                          ],
                         ),
-                        Container(
-                          color: Colors.orange,
-                          child: Icon(
-                            Icons.favorite_outline,
-                            color: Color(0xff1a1a1a),
-                          ),
+                        const Icon(
+                          Icons.favorite_outline,
+                          color: Color(0xff1a1a1a),
                         ),
-                        Container(
-                          color: Colors.blue,
-                          child: Icon(
-                            Icons.ios_share_outlined,
-                            color: Color(0xff1a1a1a),
-                          ),
+                        const Icon(
+                          Icons.ios_share_outlined,
+                          color: Color(0xff1a1a1a),
                         )
                       ],
                     ),
