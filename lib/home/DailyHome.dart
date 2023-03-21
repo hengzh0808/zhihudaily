@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +5,8 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:logger/logger.dart';
 import 'package:dio/dio.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:provider/provider.dart';
+import 'package:zhihudaily/base/DailyThemeProvider.dart';
 
 import '../base/DioBiger.dart';
 import '../detail/DailyStoryDetail.dart';
@@ -97,6 +97,54 @@ class _DailyHomeState extends State<DailyHome> {
     }
   }
 
+  Widget _theme({required Widget child}) {
+    return ChangeNotifierProvider(
+      create: (_) => DailyThemeProvider(),
+      builder: (context, _) {
+        Brightness brightness = Provider.of<DailyThemeProvider>(context).brightness;
+        return Theme(
+          data: (){
+            if (brightness == Brightness.light) {
+              return ThemeData(
+                  appBarTheme: AppBarTheme(
+                    backgroundColor: Colors.white,
+                  ),
+                  textTheme: TextTheme(
+                  // 导航栏标题
+                  headlineLarge: TextStyle(),
+                  // 导航栏星期
+                  headlineMedium: TextStyle(
+                    fontSize: 20,
+                    color: brightness == Brightness.light ? Colors.black87 : Colors.black87,
+                  ),
+                  // 导航栏日期
+                  headlineSmall: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: brightness == Brightness.light ? Colors.black54 : Colors.black54,
+                  ),
+                ),
+              );
+            } else {
+              return ThemeData(
+                textTheme: TextTheme(
+                  // 导航栏标题
+                  headlineLarge: TextStyle(),
+                  // 导航栏星期
+                  headlineMedium: TextStyle(),
+                  // 导航栏日期
+                  headlineSmall: TextStyle(),
+                ),
+                appBarTheme: AppBarTheme(backgroundColor: Colors.white),
+              );
+            }
+          }(),
+          child: child,
+        );
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -110,58 +158,64 @@ class _DailyHomeState extends State<DailyHome> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        titleSpacing: 0,
-        title: Row(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
-              child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(_weekDay,
-                        style: const TextStyle(
-                            fontSize: 20, color: Colors.black87)),
-                    Text(_date,
-                        style: const TextStyle(
-                            fontSize: 15,
-                            color: Colors.black54,
-                            fontWeight: FontWeight.bold)),
-                  ]),
-            ),
-            Container(
-              width: 1.5,
-              height: kToolbarHeight - 20,
-              color: Colors.black.withAlpha(25),
-            )
-          ],
+    return _theme(
+      child: Scaffold(
+        appBar: AppBar(
+          titleSpacing: 0,
+          title: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(_weekDay,
+                          style: const TextStyle(
+                              fontSize: 20, color: Colors.black87)),
+                      Text(_date,
+                          style: const TextStyle(
+                              fontSize: 15,
+                              color: Colors.black54,
+                              fontWeight: FontWeight.bold)),
+                    ]),
+              ),
+              Container(
+                width: 1.5,
+                height: kToolbarHeight - 20,
+                color: Colors.black.withAlpha(25),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 12),
+                child: Text('知乎日报'),
+              )
+            ],
+          ),
         ),
-      ),
-      body: Container(
-        child: EasyRefresh(
-          onRefresh: _refresh,
-          onLoad: _load,
-          child: CustomScrollView(
-            slivers: () {
-                  if (_dailyItems.isNotEmpty) {
-                    return <Widget>[
-                      SliverToBoxAdapter(
-                        child: LayoutBuilder(builder: (context, constraints) {
-                          return Container(
-                            height: constraints.maxWidth,
-                            child: DailyHomeBanner(
-                              topStories: _dailyItems.first.topStories ?? [],
-                              onTap: (story) => _onTapStory(story.id),
-                            ),
-                          );
-                        }),
-                      )
-                    ];
-                  }
-                  return <Widget>[];
-                }() +
-                _buildDailyList(),
+        body: Container(
+          child: EasyRefresh(
+            onRefresh: _refresh,
+            onLoad: _load,
+            child: CustomScrollView(
+              slivers: () {
+                    if (_dailyItems.isNotEmpty) {
+                      return <Widget>[
+                        SliverToBoxAdapter(
+                          child: LayoutBuilder(builder: (context, constraints) {
+                            return Container(
+                              height: constraints.maxWidth,
+                              child: DailyHomeBanner(
+                                topStories: _dailyItems.first.topStories ?? [],
+                                onTap: (story) => _onTapStory(story.id),
+                              ),
+                            );
+                          }),
+                        )
+                      ];
+                    }
+                    return <Widget>[];
+                  }() +
+                  _buildDailyList(),
+            ),
           ),
         ),
       ),

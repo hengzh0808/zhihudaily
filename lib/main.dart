@@ -22,9 +22,6 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         platform: TargetPlatform.iOS,
         fontFamily: 'MiSans',
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.white,
-        ),
       ),
     );
   }
