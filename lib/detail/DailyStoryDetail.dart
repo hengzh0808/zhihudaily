@@ -139,30 +139,39 @@ class _DailyStoryDetailState extends State<DailyStoryDetail> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         // GestureDetector(
-                        ExpandGestureDetector(
-                          expandArea: EdgeInsets.all(100),
-                          onTap: () {
-                            Fluttertoast.showToast(msg: '点击了');
-                          },
-                          child: Container(
-                            color: Colors.red,
-                            child: Icon(
-                              Icons.chat_bubble_outline,
-                              color: Color(0xff1a1a1a),
+                        Stack(
+                          alignment: Alignment.topRight,
+                          children: [
+                            ExpandGestureDetector(
+                              expandArea: EdgeInsets.all(0),
+                              onTap: () {
+                                Fluttertoast.showToast(msg: '点击了');
+                              },
+                              child: Container(
+                                color: Colors.red,
+                                child: Icon(
+                                  Icons.chat_bubble_outline,
+                                  color: Color(0xff1a1a1a),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Align(
-                            alignment: Alignment.topLeft,
-                            child: () {
-                              int? count = _storyExtraInfo?.count?.comments;
-                              if (count != null && count > 0) {
-                                return Text('$count');
-                              }
-                              return Text('');
-                            }(),
-                          ),
+                            SizedOverflowBox(
+                              size: Size(0, 0),
+                              alignment: Alignment.topLeft,
+                              child: () {
+                                int? count = _storyExtraInfo?.count?.comments;
+                                if (count != null && count > 0) {
+                                  return Text(
+                                    '$count',
+                                    style: TextStyle(
+                                        fontSize: 10,
+                                        backgroundColor: Colors.green),
+                                  );
+                                }
+                                return Text('');
+                              }(),
+                            )
+                          ],
                         ),
                         Container(
                           color: Colors.green,
@@ -171,28 +180,11 @@ class _DailyStoryDetailState extends State<DailyStoryDetail> {
                             color: Color(0xff1a1a1a),
                           ),
                         ),
-                        Expanded(
-                          child: Align(
-                            alignment: Alignment.topLeft,
-                            child: () {
-                              int? count = _storyExtraInfo?.count?.likes;
-                              if (count != null && count > 0) {
-                                return Text('$count');
-                              }
-                              return Text('');
-                            }(),
-                          ),
-                        ),
                         Container(
                           color: Colors.orange,
                           child: Icon(
                             Icons.favorite_outline,
                             color: Color(0xff1a1a1a),
-                          ),
-                        ),
-                        Expanded(
-                          child: Container(
-                            color: Colors.pink,
                           ),
                         ),
                         Container(
