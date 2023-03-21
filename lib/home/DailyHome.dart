@@ -1,5 +1,9 @@
+import 'dart:convert';
+import 'dart:ffi';
+
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:logger/logger.dart';
@@ -101,44 +105,75 @@ class _DailyHomeState extends State<DailyHome> {
     return ChangeNotifierProvider(
       create: (_) => DailyThemeProvider(),
       builder: (context, _) {
-        Brightness brightness = Provider.of<DailyThemeProvider>(context).brightness;
+        bool isLight = Provider.of<DailyThemeProvider>(context).brightness ==
+            Brightness.light;
         return Theme(
-          data: (){
-            if (brightness == Brightness.light) {
-              return ThemeData(
-                  appBarTheme: AppBarTheme(
-                    backgroundColor: Colors.white,
-                  ),
-                  textTheme: TextTheme(
+          data: ThemeData(
+            scaffoldBackgroundColor: isLight ? Colors.white : Color(0xff1a1a1a),
+            appBarTheme: AppBarTheme(
+              backgroundColor: isLight ? Colors.white : Color(0xff1a1a1a),
+            ),
+            dividerColor: isLight ? Color(0xffd3d3d3) : Color(0xff444444),
+            textTheme: Theme.of(context).textTheme.copyWith(
                   // 导航栏标题
-                  headlineLarge: TextStyle(),
+                  displayLarge: TextStyle(
+                    fontSize: 25,
+                    fontWeight: FontWeight.w500,
+                    color: isLight ? Color(0xff1a1a1a) : Color(0xff999999),
+                  ),
                   // 导航栏星期
-                  headlineMedium: TextStyle(
+                  displayMedium: TextStyle(
                     fontSize: 20,
-                    color: brightness == Brightness.light ? Colors.black87 : Colors.black87,
+                    fontWeight: FontWeight.w500,
+                    color: isLight ? Color(0xff444444) : Color(0xff808080),
                   ),
                   // 导航栏日期
-                  headlineSmall: TextStyle(
+                  displaySmall: TextStyle(
                     fontSize: 15,
+                    color: isLight ? Color(0xff444444) : Color(0xff808080),
+                  ),
+                  // Banner标题
+                  headlineMedium: const TextStyle(
+                    fontSize: 20,
+                    color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    color: brightness == Brightness.light ? Colors.black54 : Colors.black54,
+                    overflow: TextOverflow.ellipsis,
+                    shadows: <Shadow>[
+                      Shadow(
+                        offset: Offset(1.0, 1.0),
+                        blurRadius: 0.0,
+                        color: Color.fromARGB(255, 0, 0, 0),
+                      )
+                    ],
+                  ),
+                  // Banner子标题
+                  headlineSmall: const TextStyle(
+                    fontSize: 15,
+                    color: Color(0xffe7ded7),
+                    overflow: TextOverflow.ellipsis,
+                    shadows: <Shadow>[
+                      Shadow(
+                        offset: Offset(0.5, 0.5),
+                        blurRadius: 0.0,
+                        color: Color.fromARGB(255, 0, 0, 0),
+                      )
+                    ],
+                  ),
+                  // 卡片标题
+                  titleMedium: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    textBaseline: TextBaseline.alphabetic,
+                    overflow: TextOverflow.ellipsis,
+                    color: isLight ? Color(0xff1a1a1a) : Color(0xff999999),
+                  ),
+                  // 卡片子标题
+                  titleSmall: TextStyle(
+                    fontSize: 15,
+                    color: isLight ? Color(0xff999999) : Color(0xff646464),
                   ),
                 ),
-              );
-            } else {
-              return ThemeData(
-                textTheme: TextTheme(
-                  // 导航栏标题
-                  headlineLarge: TextStyle(),
-                  // 导航栏星期
-                  headlineMedium: TextStyle(),
-                  // 导航栏日期
-                  headlineSmall: TextStyle(),
-                ),
-                appBarTheme: AppBarTheme(backgroundColor: Colors.white),
-              );
-            }
-          }(),
+          ),
           child: child,
         );
       },
@@ -159,70 +194,81 @@ class _DailyHomeState extends State<DailyHome> {
   @override
   Widget build(BuildContext context) {
     return _theme(
-      child: Scaffold(
-        appBar: AppBar(
-          titleSpacing: 0,
-          title: Row(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
-                child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(_weekDay,
-                          style: const TextStyle(
-                              fontSize: 20, color: Colors.black87)),
-                      Text(_date,
-                          style: const TextStyle(
-                              fontSize: 15,
-                              color: Colors.black54,
-                              fontWeight: FontWeight.bold)),
-                    ]),
+      child: LayoutBuilder(
+        builder: (context, _) {
+          TextStyle? style = Theme.of(context).textTheme.displayLarge;
+          return Scaffold(
+            appBar: AppBar(
+              titleSpacing: 0,
+              title: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _weekDay,
+                          style: Theme.of(context).textTheme.displayMedium,
+                        ),
+                        Text(
+                          _date,
+                          style: Theme.of(context).textTheme.displaySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: 1.5,
+                    height: kToolbarHeight - 20,
+                    color: Theme.of(context).dividerColor,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 12),
+                    child: Text(
+                      '知乎日报',
+                      style: Theme.of(context).textTheme.displayLarge,
+                    ),
+                  )
+                ],
               ),
-              Container(
-                width: 1.5,
-                height: kToolbarHeight - 20,
-                color: Colors.black.withAlpha(25),
-              ),
-              Padding(
-                padding: EdgeInsets.only(left: 12),
-                child: Text('知乎日报'),
-              )
-            ],
-          ),
-        ),
-        body: Container(
-          child: EasyRefresh(
-            onRefresh: _refresh,
-            onLoad: _load,
-            child: CustomScrollView(
-              slivers: () {
-                    if (_dailyItems.isNotEmpty) {
-                      return <Widget>[
-                        SliverToBoxAdapter(
-                          child: LayoutBuilder(builder: (context, constraints) {
-                            return Container(
-                              height: constraints.maxWidth,
-                              child: DailyHomeBanner(
-                                topStories: _dailyItems.first.topStories ?? [],
-                                onTap: (story) => _onTapStory(story.id),
-                              ),
-                            );
-                          }),
-                        )
-                      ];
-                    }
-                    return <Widget>[];
-                  }() +
-                  _buildDailyList(),
             ),
-          ),
-        ),
+            body: Container(
+              child: EasyRefresh(
+                onRefresh: _refresh,
+                onLoad: _load,
+                child: CustomScrollView(
+                  slivers: () {
+                        if (_dailyItems.isNotEmpty) {
+                          return <Widget>[
+                            SliverToBoxAdapter(
+                              child: LayoutBuilder(
+                                  builder: (context, constraints) {
+                                return Container(
+                                  height: constraints.maxWidth,
+                                  child: DailyHomeBanner(
+                                    topStories:
+                                        _dailyItems.first.topStories ?? [],
+                                    onTap: (story) => _onTapStory(story.id),
+                                  ),
+                                );
+                              }),
+                            )
+                          ];
+                        }
+                        return <Widget>[];
+                      }() +
+                      _buildDailyList(context),
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
 
-  List<Widget> _buildDailyList() {
+  List<Widget> _buildDailyList(context) {
     return () {
       List<Widget> res = [];
       for (int i = 0; i < _dailyItems.length; i++) {
@@ -246,14 +292,17 @@ class _DailyHomeState extends State<DailyHome> {
                         padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
                         child: Text(
                           formatDate,
-                          style: const TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.w500),
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: Theme.of(context).dividerColor,
+                          ),
                         ),
                       ),
                       Expanded(
                         child: Container(
                           height: .5,
-                          color: Colors.grey,
+                          color: Theme.of(context).dividerColor,
                         ),
                       )
                     ],
@@ -285,21 +334,12 @@ class _DailyHomeState extends State<DailyHome> {
                             Text(
                               story.title ?? "",
                               maxLines: 2,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 18,
-                                color: Colors.black87,
-                                textBaseline: TextBaseline.alphabetic,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                              style: Theme.of(context).textTheme.titleMedium,
                             ),
                             Container(height: 5),
                             Text(
                               story.hint ?? "",
-                              style: const TextStyle(
-                                fontSize: 15,
-                                color: Colors.black54,
-                              ),
+                              style: Theme.of(context).textTheme.titleSmall,
                             ),
                           ],
                         ),

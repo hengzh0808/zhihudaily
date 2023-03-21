@@ -81,20 +81,11 @@ class _DailyHomeBannerState extends State<DailyHomeBanner> {
                           Text(
                             story.title ?? "",
                             maxLines: 2,
-                            style: TextStyle(
-                              fontSize: 20,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            style: Theme.of(context).textTheme.headlineMedium,
                           ),
                           Text(
                             story.hint ?? "",
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: Colors.white,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            style: Theme.of(context).textTheme.headlineSmall,
                           )
                         ],
                       ),

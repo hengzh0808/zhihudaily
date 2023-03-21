@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 
 class DailyThemeProvider extends ChangeNotifier {
-  Brightness _brightness = Brightness.light;
+  Brightness _brightness = Brightness.dark;
 
   Brightness get brightness => _brightness;
 
