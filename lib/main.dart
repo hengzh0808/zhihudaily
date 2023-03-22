@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../home/DailyHome.dart';
+import '../base/DailyThemeProvider.dart';
 
 void main() {
   // debugPaintSizeEnabled = true;
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
   ));
+
   runApp(const MyApp());
+
+  DailyThemeSharedPreferences.brightness.then((brightness) {
+    DailyThemeProvider().setTheme(brightness);
+  });
 }
 
 class MyApp extends StatelessWidget {

@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:ffi';
-
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,6 +13,7 @@ import '../base/DioBiger.dart';
 import '../detail/DailyStoryDetail.dart';
 import '../home/DailyHomeBanner.dart';
 import '../Model/DailyDateStoriesModel.dart';
+import '../setting/DailySetting.dart';
 
 class DailyHome extends StatefulWidget {
   const DailyHome({Key? key}) : super(key: key);
@@ -101,6 +99,15 @@ class _DailyHomeState extends State<DailyHome> {
     }
   }
 
+  void _onTapSetting() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) {
+        return DailySetting();
+      }),
+    );
+  }
+
   Widget _theme({required Widget child}) {
     return ChangeNotifierProvider(
       create: (_) => DailyThemeProvider(),
@@ -112,6 +119,9 @@ class _DailyHomeState extends State<DailyHome> {
             scaffoldBackgroundColor: isLight ? Colors.white : Color(0xff1a1a1a),
             appBarTheme: AppBarTheme(
               backgroundColor: isLight ? Colors.white : Color(0xff1a1a1a),
+              iconTheme: IconThemeData(
+                color: isLight ? Color(0xff191919) : Color(0xff8e8e8e),
+              ),
             ),
             dividerColor: isLight ? Color(0xffd3d3d3) : Color(0xff444444),
             textTheme: Theme.of(context).textTheme.copyWith(
@@ -232,6 +242,18 @@ class _DailyHomeState extends State<DailyHome> {
                   )
                 ],
               ),
+              actions: [
+                GestureDetector(
+                  onTap: () => _onTapSetting(),
+                  child: Padding(
+                    padding: EdgeInsets.only(right: 12),
+                    child: Icon(
+                      Icons.account_circle,
+                      size: 36,
+                    ),
+                  ),
+                )
+              ],
             ),
             body: Container(
               child: EasyRefresh(
