@@ -4,9 +4,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:zhihudaily/base/ExpandGesture/expand_widgets.dart';
 
+import '../base/DailyThemeProvider.dart';
 import '../base/DioBiger.dart';
 import '../Model/DailyStoryDetailModel.dart';
 import '../Model/DailyStoryExtraInfo.dart';
@@ -29,6 +31,43 @@ class _DailyStoryDetailState extends State<DailyStoryDetail> {
     ..setUserAgent('ZhihuHybrid');
   bool _webFinish = false;
   double _webProgress = 0.0;
+
+  Widget _theme(
+      {required Widget Function(BuildContext, BoxConstraints, DailyTheme theme)
+          childBuilder}) {
+    // 这里不能用ChangeNotifierProvider，因为不需要自动移除通知
+    return ListenableProvider(
+      create: (_) => DailyThemeProvider(),
+      builder: (context, _) {
+        bool isLight = Provider.of<DailyThemeProvider>(context).brightness ==
+            Brightness.light;
+        return Theme(
+          data: ThemeData(
+            progressIndicatorTheme: ProgressIndicatorThemeData(
+              color: isLight ? Color(0xff191919) : Color(0xff8e8e8e),
+            ),
+            scaffoldBackgroundColor: isLight ? Colors.white : Color(0xff1a1a1a),
+            appBarTheme: AppBarTheme(
+              backgroundColor: isLight ? Colors.white : Color(0xff1a1a1a),
+              elevation: 0,
+              iconTheme: IconThemeData(
+                color: isLight ? Color(0xff191919) : Color(0xff8e8e8e),
+              ),
+            ),
+            iconTheme: IconThemeData(
+              color: isLight ? Color(0xff191919) : Color(0xff8e8e8e),
+            ),
+          ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return childBuilder(context, constraints,
+                  Provider.of<DailyThemeProvider>(context).theme);
+            },
+          ),
+        );
+      },
+    );
+  }
 
   @override
   void initState() {
@@ -81,123 +120,155 @@ class _DailyStoryDetailState extends State<DailyStoryDetail> {
         Fluttertoast.showToast(msg: "加载失败 $error");
       },
       onProgress: (progress) {
-        setState(() {
-          _webProgress = progress / 100.0;
-        });
+        if (mounted) {
+          setState(() {
+            _webProgress = progress / 100.0;
+          });
+        }
       },
     ));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xfff6f6f6),
-      body: LayoutBuilder(builder: (context, constraints) {
-        return Stack(
-          children: [
-            WebViewWidget(controller: _controller),
-            Visibility(
-              visible: !_webFinish,
-              child: Center(
-                child: CircularProgressIndicator(
-                  value: _webProgress,
-                ),
-              ),
-            )
-          ],
-        );
-      }),
-      bottomNavigationBar: BottomAppBar(
-        child: Container(
-          height: 50,
-          child: Row(
-            children: [
-              IconButton(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                icon: const Icon(
-                  Icons.arrow_back_ios,
-                  color: Color(0xff1a1a1a),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
-                child: Container(
-                  width: 0.5,
-                  color: const Color(0xffd3d3d3),
-                ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-                  child: IntrinsicHeight(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // GestureDetector(
-                        Stack(
-                          alignment: Alignment.topRight,
-                          children: [
-                            const Icon(
-                              Icons.chat_bubble_outline,
-                              color: Color(0xff1a1a1a),
-                            ),
-                            SizedOverflowBox(
-                              alignment: Alignment.topLeft,
-                              size: const Size(0, 10),
-                              child: () {
-                                int? count = _storyExtraInfo?.count?.comments;
-                                if (count != null && count > 0) {
-                                  return Text(
-                                    '$count',
-                                    style: const TextStyle(fontSize: 10),
-                                  );
-                                }
-                              }(),
-                            )
-                          ],
-                        ),
-                        Stack(
-                          alignment: Alignment.topRight,
-                          children: [
-                            const Icon(
-                              Icons.thumb_up_outlined,
-                              color: Color(0xff1a1a1a),
-                            ),
-                            SizedOverflowBox(
-                              alignment: Alignment.topLeft,
-                              size: const Size(0, 10),
-                              child: () {
-                                int? count = _storyExtraInfo?.count?.likes;
-                                if (count != null && count > 0) {
-                                  return Text(
-                                    '$count',
-                                    style: const TextStyle(fontSize: 10),
-                                  );
-                                }
-                              }(),
-                            )
-                          ],
-                        ),
-                        const Icon(
-                          Icons.favorite_outline,
-                          color: Color(0xff1a1a1a),
-                        ),
-                        const Icon(
-                          Icons.ios_share_outlined,
-                          color: Color(0xff1a1a1a),
-                        )
-                      ],
+    return _theme(
+      childBuilder: (themeContext, constraints, theme) {
+        return Scaffold(
+          body: LayoutBuilder(builder: (context, constraints) {
+            return Stack(
+              children: [
+                WebViewWidget(controller: _controller),
+                Visibility(
+                  visible: !_webFinish,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      value: _webProgress,
                     ),
                   ),
-                ),
-              )
-            ],
+                )
+              ],
+            );
+          }),
+          bottomNavigationBar: BottomAppBar(
+            color: Theme.of(themeContext).appBarTheme.backgroundColor,
+            child: Container(
+              height: 50,
+              child: Row(
+                children: [
+                  IconButton(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    icon: Icon(
+                      Icons.arrow_back_ios,
+                      color:
+                          Theme.of(themeContext).appBarTheme.iconTheme?.color,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
+                    child: Container(
+                      width: 0.5,
+                      color: Theme.of(themeContext).dividerColor,
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+                      child: IntrinsicHeight(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // GestureDetector(
+                            Stack(
+                              alignment: Alignment.topRight,
+                              children: [
+                                Icon(
+                                  Icons.chat_bubble_outline,
+                                  color: Theme.of(themeContext)
+                                      .appBarTheme
+                                      .iconTheme
+                                      ?.color,
+                                ),
+                                SizedOverflowBox(
+                                  alignment: Alignment.topLeft,
+                                  size: const Size(0, 10),
+                                  child: () {
+                                    int? count =
+                                        _storyExtraInfo?.count?.comments;
+                                    if (count != null && count > 0) {
+                                      return Text(
+                                        '$count',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: Theme.of(themeContext)
+                                              .appBarTheme
+                                              .iconTheme
+                                              ?.color,
+                                        ),
+                                      );
+                                    }
+                                  }(),
+                                )
+                              ],
+                            ),
+                            Stack(
+                              alignment: Alignment.topRight,
+                              children: [
+                                Icon(
+                                  Icons.thumb_up_outlined,
+                                  color: Theme.of(themeContext)
+                                      .appBarTheme
+                                      .iconTheme
+                                      ?.color,
+                                ),
+                                SizedOverflowBox(
+                                  alignment: Alignment.topLeft,
+                                  size: const Size(0, 10),
+                                  child: () {
+                                    int? count = _storyExtraInfo?.count?.likes;
+                                    if (count != null && count > 0) {
+                                      return Text(
+                                        '$count',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: Theme.of(themeContext)
+                                              .appBarTheme
+                                              .iconTheme
+                                              ?.color,
+                                        ),
+                                      );
+                                    }
+                                  }(),
+                                )
+                              ],
+                            ),
+                            Icon(
+                              Icons.favorite_outline,
+                              color: Theme.of(themeContext)
+                                  .appBarTheme
+                                  .iconTheme
+                                  ?.color,
+                            ),
+                            Icon(
+                              Icons.ios_share_outlined,
+                              color: Theme.of(themeContext)
+                                  .appBarTheme
+                                  .iconTheme
+                                  ?.color,
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

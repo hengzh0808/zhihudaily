@@ -109,7 +109,7 @@ class _DailyHomeState extends State<DailyHome> {
   }
 
   Widget _theme({required Widget child}) {
-    return ChangeNotifierProvider(
+    return ListenableProvider(
       create: (_) => DailyThemeProvider(),
       builder: (context, _) {
         bool isLight = Provider.of<DailyThemeProvider>(context).brightness ==

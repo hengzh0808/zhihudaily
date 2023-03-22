@@ -1,39 +1,75 @@
+import 'dart:ui';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class DailyThemeProvider extends ChangeNotifier {
-  factory DailyThemeProvider() => _instance;
+enum DailyTheme {
+  light,
+  dark,
+  system,
+}
 
+class DailyThemeProvider extends ChangeNotifier with WidgetsBindingObserver {
+  static DailyThemeProvider? _instance;
   DailyThemeProvider._internal();
-  static late final DailyThemeProvider _instance = DailyThemeProvider._internal();
+  factory DailyThemeProvider() {
+    if (_instance == null) {
+      _instance = DailyThemeProvider._internal();
+      WidgetsBinding.instance.addObserver(_instance!);
+    }
+    return _instance!;
+  }
 
-  static Brightness _brightness = Brightness.light;
+  Brightness _brightness = Brightness.light;
+  DailyTheme _theme = DailyTheme.light;
+
   Brightness get brightness => _brightness;
+  DailyTheme get theme => _theme;
 
-  void setTheme(Brightness brightness) {
-    if (DailyThemeProvider._brightness != brightness) {
-      DailyThemeSharedPreferences.setBrightness(brightness);
-      _brightness = brightness;
+  void setTheme(DailyTheme theme) {
+    if (theme != _theme) {
+      DailyThemeSharedPreferences.setTheme(theme);
+      _theme = theme;
+      if (_theme == DailyTheme.system) {
+        _brightness = window.platformBrightness;
+      } else if (_theme == DailyTheme.dark) {
+        _brightness = Brightness.dark;
+      } else {
+        _brightness = Brightness.light;
+      }
       notifyListeners();
+    }
+  }
+
+  @override
+  void didChangePlatformBrightness() {
+    if (_theme == DailyTheme.system) {
+      if (_brightness != window.platformBrightness) {
+        _brightness = window.platformBrightness;
+        notifyListeners();
+      }
     }
   }
 }
 
 extension DailyThemeSharedPreferences on SharedPreferences {
-  static String _themeKey = 'DailyTheme';
+  static const String _DailyThemeKey = 'DailyTheme';
 
-  static Future<Brightness> get brightness async {
+  static Future<DailyTheme> get theme async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
-    int index = preferences.getInt(_themeKey) ?? Brightness.light.index;
-    if (index < Brightness.values.length && index >= 0) {
-      return Brightness.values[index];
+    int index = preferences.getInt(_DailyThemeKey) ?? DailyTheme.light.index;
+    if (index == 2) {
+      return DailyTheme.system;
+    } else if (index == 1) {
+      return DailyTheme.dark;
+    } else {
+      return DailyTheme.light;
     }
-    return Brightness.light;
   }
 
-  static setBrightness(Brightness brightness) async {
+  static setTheme(DailyTheme theme) async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
-    preferences.setInt(_themeKey, brightness.index);
+    preferences.setInt(_DailyThemeKey, theme.index);
   }
 }

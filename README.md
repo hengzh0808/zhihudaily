@@ -14,4 +14,5 @@
 9. 如何扩大热区
 10. 为什么ThemeData无法继承
 11. 主题字体没法复制
-12. Scaffold-Container-Expanded会异常
+12. Scaffold-Container-Expanded
+13. 有的throw无法catch，比如访问数组越界（String date = _dailyItems.last.date ?? ""）

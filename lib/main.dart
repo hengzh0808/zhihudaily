@@ -11,8 +11,8 @@ void main() {
 
   runApp(const MyApp());
 
-  DailyThemeSharedPreferences.brightness.then((brightness) {
-    DailyThemeProvider().setTheme(brightness);
+  DailyThemeSharedPreferences.theme.then((theme) {
+    DailyThemeProvider().setTheme(theme);
   });
 }
 
