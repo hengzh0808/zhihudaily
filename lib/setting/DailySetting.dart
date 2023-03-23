@@ -1,49 +1,43 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:provider/provider.dart';
-import '../base/DailyThemeProvider.dart';
+import 'package:get/get.dart';
+import '../base/theme/DailyThemeGetxCtrl.dart';
+import '../base/theme/DailyTheme.dart';
 
-class DailySetting extends StatefulWidget {
-  const DailySetting({Key? key}) : super(key: key);
+class DailySetting extends StatelessWidget {
+  DailySetting({Key? key}) : super(key: key);
 
-  @override
-  State<DailySetting> createState() => _DailySettingState();
-}
-
-class _DailySettingState extends State<DailySetting> {
   Widget _theme(
-      {required Widget Function(BuildContext, BoxConstraints, DailyTheme theme)
+      {required Widget Function(
+              BuildContext, BoxConstraints, DailyThemeMode theme)
           childBuilder}) {
-    // 这里不能用ChangeNotifierProvider，因为不需要自动移除通知
-    return ListenableProvider(
-      create: (_) => DailyThemeProvider(),
-      builder: (context, _) {
-        bool isLight = Provider.of<DailyThemeProvider>(context).brightness ==
-            Brightness.light;
-        return Theme(
-          data: ThemeData(
-            scaffoldBackgroundColor: isLight ? Colors.white : Color(0xff1a1a1a),
-            appBarTheme: AppBarTheme(
-              backgroundColor: isLight ? Colors.white : Color(0xff1a1a1a),
-              elevation: 0,
+    return GetBuilder<DailyThemeGetxCtrl>(
+        init: DailyThemeGetxCtrl(),
+        builder: (controller) {
+          bool isLight = controller.brightness == Brightness.light;
+          return Theme(
+            data: ThemeData(
+              scaffoldBackgroundColor:
+                  isLight ? Colors.white : Color(0xff1a1a1a),
+              appBarTheme: AppBarTheme(
+                backgroundColor: isLight ? Colors.white : Color(0xff1a1a1a),
+                elevation: 0,
+                iconTheme: IconThemeData(
+                  color: isLight ? Color(0xff191919) : Color(0xff8e8e8e),
+                ),
+              ),
               iconTheme: IconThemeData(
                 color: isLight ? Color(0xff191919) : Color(0xff8e8e8e),
               ),
             ),
-            iconTheme: IconThemeData(
-              color: isLight ? Color(0xff191919) : Color(0xff8e8e8e),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return childBuilder(context, constraints, controller.theme);
+              },
             ),
-          ),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return childBuilder(context, constraints,
-                  Provider.of<DailyThemeProvider>(context).theme);
-            },
-          ),
-        );
-      },
-    );
+          );
+        });
   }
 
   @override
@@ -75,9 +69,7 @@ class _DailySettingState extends State<DailySetting> {
                         fontSize: 25,
                       ),
                     ),
-                    onPressed: () {
-                      Fluttertoast.showToast(msg: '待开发');
-                    },
+                    onPressed: () => Get.toNamed('/login'),
                   )
                 ],
               ),
@@ -94,20 +86,20 @@ class _DailySettingState extends State<DailySetting> {
                     children: [
                       IconButton(
                         onPressed: () {
-                          if (theme == DailyTheme.light) {
-                            DailyThemeProvider().setTheme(DailyTheme.dark);
-                          } else if (theme == DailyTheme.dark) {
-                            DailyThemeProvider().setTheme(DailyTheme.system);
-                          } else if (theme == DailyTheme.system) {
-                            DailyThemeProvider().setTheme(DailyTheme.light);
+                          if (theme == DailyThemeMode.light) {
+                            DailyTheme().setTheme(DailyThemeMode.dark);
+                          } else if (theme == DailyThemeMode.dark) {
+                            DailyTheme().setTheme(DailyThemeMode.system);
+                          } else if (theme == DailyThemeMode.system) {
+                            DailyTheme().setTheme(DailyThemeMode.light);
                           }
                         },
                         iconSize: 48,
                         icon: Center(
                           child: Icon(
-                            theme == DailyTheme.system
+                            theme == DailyThemeMode.system
                                 ? Icons.brightness_auto
-                                : theme == DailyTheme.dark
+                                : theme == DailyThemeMode.dark
                                     ? Icons.dark_mode
                                     : Icons.light_mode,
                           ),
@@ -115,9 +107,9 @@ class _DailySettingState extends State<DailySetting> {
                       ),
                       Align(
                         child: Text(
-                          theme == DailyTheme.system
+                          theme == DailyThemeMode.system
                               ? '跟随系统'
-                              : theme == DailyTheme.dark
+                              : theme == DailyThemeMode.dark
                                   ? '夜间模式'
                                   : '日间模式',
                           style: TextStyle(

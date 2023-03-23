@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../home/DailyHome.dart';
-import '../base/DailyThemeProvider.dart';
+import 'package:get/get.dart';
+import '../base/DailyRoutes.dart';
+import '../base/theme/DailyTheme.dart';
 
 void main() {
   // debugPaintSizeEnabled = true;
+  // WidgetsFlutterBinding.ensureInitialized();
+
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
   ));
 
   runApp(const MyApp());
-
-  DailyThemeSharedPreferences.theme.then((theme) {
-    DailyThemeProvider().setTheme(theme);
-  });
 }
 
 class MyApp extends StatelessWidget {
@@ -24,7 +23,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'zhihudaily',
-      home: const DailyHome(),
+      initialRoute: DailyRoutes.home,
+      onGenerateRoute: (setting) => DailyRoutes.onGenerateRoute(setting),
+      navigatorKey: Get.key,
       theme: ThemeData(
         platform: TargetPlatform.iOS,
         fontFamily: 'MiSans',

@@ -1,19 +1,18 @@
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:logger/logger.dart';
 import 'package:dio/dio.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
-import 'package:zhihudaily/base/DailyThemeProvider.dart';
+import 'package:get/get.dart' hide Response;
 
 import '../base/DioBiger.dart';
-import '../detail/DailyStoryDetail.dart';
 import '../home/DailyHomeBanner.dart';
 import '../Model/DailyDateStoriesModel.dart';
-import '../setting/DailySetting.dart';
+import '../base/DailyRoutes.dart';
+import '../base/theme/DailyTheme.dart';
 
 class DailyHome extends StatefulWidget {
   const DailyHome({Key? key}) : super(key: key);
@@ -86,34 +85,13 @@ class _DailyHomeState extends State<DailyHome> {
     // return res;
   }
 
-  void _onTapStory(int? id) {
-    if (id != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) {
-          return DailyStoryDetail(
-            id: id,
-          );
-        }),
-      );
-    }
-  }
-
-  void _onTapSetting() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) {
-        return DailySetting();
-      }),
-    );
-  }
-
   Widget _theme({required Widget child}) {
+    // 这里不能用ChangeNotifierProvider，因为DailyThemeProvider是单例不需要自动移除通知
     return ListenableProvider(
       create: (_) => DailyThemeProvider(),
       builder: (context, _) {
-        bool isLight = Provider.of<DailyThemeProvider>(context).brightness ==
-            Brightness.light;
+        // 不调用Provider.of无法获取通知？
+        bool isLight = Provider.of<DailyThemeProvider>(context).brightness == Brightness.light;
         return Theme(
           data: ThemeData(
             scaffoldBackgroundColor: isLight ? Colors.white : Color(0xff1a1a1a),
@@ -244,7 +222,7 @@ class _DailyHomeState extends State<DailyHome> {
               ),
               actions: [
                 GestureDetector(
-                  onTap: () => _onTapSetting(),
+                  onTap: () => Get.toNamed(DailyRoutes.setting),
                   child: Padding(
                     padding: EdgeInsets.only(right: 12),
                     child: Icon(
@@ -271,7 +249,9 @@ class _DailyHomeState extends State<DailyHome> {
                                   child: DailyHomeBanner(
                                     topStories:
                                         _dailyItems.first.topStories ?? [],
-                                    onTap: (story) => _onTapStory(story.id),
+                                    onTap: (story) => Get.toNamed(
+                                        DailyRoutes.details,
+                                        arguments: {'id': story.id}),
                                   ),
                                 );
                               }),
@@ -340,9 +320,8 @@ class _DailyHomeState extends State<DailyHome> {
               (context, index) {
             final story = stories[index];
             return GestureDetector(
-              onTap: () {
-                _onTapStory(story.id);
-              },
+              onTap: () =>
+                  Get.toNamed(DailyRoutes.details, arguments: {'id': story.id}),
               child: Container(
                 padding: const EdgeInsets.all(12),
                 child: Row(

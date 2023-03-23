@@ -6,9 +6,8 @@ import 'package:flutter/rendering.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:zhihudaily/base/ExpandGesture/expand_widgets.dart';
 
-import '../base/DailyThemeProvider.dart';
+import '../base/theme/DailyTheme.dart';
 import '../base/DioBiger.dart';
 import '../Model/DailyStoryDetailModel.dart';
 import '../Model/DailyStoryExtraInfo.dart';
@@ -33,14 +32,14 @@ class _DailyStoryDetailState extends State<DailyStoryDetail> {
   double _webProgress = 0.0;
 
   Widget _theme(
-      {required Widget Function(BuildContext, BoxConstraints, DailyTheme theme)
+      {required Widget Function(
+              BuildContext, BoxConstraints, DailyThemeMode theme)
           childBuilder}) {
     // 这里不能用ChangeNotifierProvider，因为不需要自动移除通知
     return ListenableProvider(
       create: (_) => DailyThemeProvider(),
       builder: (context, _) {
-        bool isLight = Provider.of<DailyThemeProvider>(context).brightness ==
-            Brightness.light;
+        bool isLight = DailyTheme().brightness == Brightness.light;
         return Theme(
           data: ThemeData(
             progressIndicatorTheme: ProgressIndicatorThemeData(
@@ -60,8 +59,7 @@ class _DailyStoryDetailState extends State<DailyStoryDetail> {
           ),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              return childBuilder(context, constraints,
-                  Provider.of<DailyThemeProvider>(context).theme);
+              return childBuilder(context, constraints, DailyTheme().theme);
             },
           ),
         );
