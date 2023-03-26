@@ -1,7 +1,8 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import '../Model/DailyDateStoriesModel.dart';
+import '../model/DailyDateStoriesModel.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:logger/logger.dart';
 
@@ -18,23 +19,34 @@ class DailyHomeBanner extends StatefulWidget {
       _DailyHomeBannerState(topStories, onTap);
 }
 
-class _PageController1 extends PageController {
-  final initialPage;
-  _PageController1(this.initialPage) : super(initialPage: initialPage);
-
-  @override
-  void attach(ScrollPosition position) {
-    // TODO: implement attach
-    super.attach(position);
-  }
-}
-
 class _DailyHomeBannerState extends State<DailyHomeBanner> {
   _DailyHomeBannerState(this.topStories, this.onTap);
   final List<TopStories> topStories;
   final void Function(TopStories)? onTap;
-  final _pageViewControler = _PageController1(0);
-  final _pageViewControler1 = _PageController1(0);
+  final _pageViewControler = PageController(initialPage: 0);
+  Timer? _timer;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _startAutoJumpNextPage();
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    _timer?.cancel();
+  }
+
+  void _startAutoJumpNextPage() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      _pageViewControler.nextPage(
+          duration: const Duration(milliseconds: 250), curve: Curves.easeInOut);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -124,7 +136,12 @@ class _DailyHomeBannerState extends State<DailyHomeBanner> {
 
   bool _resetingPageIndex = false;
   bool _scrollNotification(notifi) {
-    if (notifi is ScrollEndNotification &&
+    //TODO: 0到-1无法丝滑滚动，可能要改库了
+    if (notifi is ScrollStartNotification) {
+      if (notifi.dragDetails != null) {
+        _timer?.cancel();
+      }
+    } else if (notifi is ScrollEndNotification &&
         !_resetingPageIndex &&
         topStories.length > 1) {
       var currentIndex = _pageViewControler.page?.round();
@@ -139,6 +156,7 @@ class _DailyHomeBannerState extends State<DailyHomeBanner> {
         _pageViewControler.jumpToPage(1);
       }
       _resetingPageIndex = false;
+      _startAutoJumpNextPage();
     }
     return false;
   }
