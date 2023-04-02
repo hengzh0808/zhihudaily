@@ -35,7 +35,10 @@ dependencies:
   fluttertoast: 8.2.1
   easy_refresh: 3.3.1
   logger: 1.3.0
-  smooth_page_indicator: 1.0.1
+  smooth_page_indicator:
+    git:
+      url: git@github.com:hengzh0808/smooth_page_indicator.git
+      ref: 390dc2332f1137e4140cb9fca20b89dc352417a4
   webview_flutter: 4.0.6
   webview_flutter_android: 3.4.3
   webview_flutter_wkwebview: 3.2.1

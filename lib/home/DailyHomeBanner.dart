@@ -215,8 +215,7 @@ class _BannerIndicator extends AnimatedWidget {
   double get _offset {
     try {
       var page = controller.page ?? controller.initialPage.toDouble();
-      var offset = min(count - 1, max(0, page - 1)).toDouble();
-      _logger.d(offset);
+      var offset = (page - 1).toDouble();
       return offset;
     } catch (_) {
       return controller.initialPage.toDouble();
