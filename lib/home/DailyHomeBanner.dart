@@ -2,29 +2,31 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import '../model/DailyDateStoriesModel.dart';
+import 'package:flutter/rendering.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:logger/logger.dart';
-
-final _logger = Logger(printer: SimplePrinter());
+import '../model/DailyDateStoriesModel.dart';
+import '../base/LogUtil.dart';
 
 class DailyHomeBanner extends StatefulWidget {
-  const DailyHomeBanner({Key? key, required this.topStories, this.onTap})
+  DailyHomeBanner(
+      {Key? key, required this.topStories, this.onTap, required this.offset})
       : super(key: key);
   final List<TopStories> topStories;
   final void Function(TopStories)? onTap;
+  final double offset;
 
   @override
   State<DailyHomeBanner> createState() =>
-      _DailyHomeBannerState(topStories, onTap);
+      _DailyHomeBannerState(topStories, onTap, offset);
 }
 
 class _DailyHomeBannerState extends State<DailyHomeBanner> {
-  _DailyHomeBannerState(this.topStories, this.onTap);
+  _DailyHomeBannerState(this.topStories, this.onTap, this.offset);
   final List<TopStories> topStories;
   final void Function(TopStories)? onTap;
   final _pageViewControler = PageController(initialPage: 0);
   Timer? _timer;
+  double offset;
 
   @override
   void initState() {
@@ -40,98 +42,130 @@ class _DailyHomeBannerState extends State<DailyHomeBanner> {
     _timer?.cancel();
   }
 
+  @override
+  void didUpdateWidget(covariant DailyHomeBanner oldWidget) {
+    // TODO: implement didUpdateWidget
+    super.didUpdateWidget(oldWidget);
+    offset = widget.offset;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    LogD("_DailyHomeBannerState build offset: $offset");
+    return Container(
+      child: Stack(
+        clipBehavior: Clip.none,
+        fit: StackFit.expand,
+        children: [
+          NotificationListener<Notification>(
+            onNotification: _scrollNotification,
+            child: PageView(
+              clipBehavior: Clip.none,
+              physics: const ClampingScrollPhysics(),
+              controller: _pageViewControler,
+              children: () {
+                var subWidgets = topStories.map((story) {
+                  int storyIndex = topStories.indexOf(story);
+                  return GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      onTap?.call(story);
+                    },
+                    child: _buildBanner(story, storyIndex),
+                  );
+                }).toList();
+                if (subWidgets.length > 1) {
+                  subWidgets.insert(0, subWidgets.last);
+                  subWidgets.add(subWidgets[1]);
+                }
+                return subWidgets;
+              }(),
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomRight,
+            child: Padding(
+              padding: EdgeInsets.all(12),
+              child: _BannerIndicator(
+                count: topStories.length,
+                controller: _pageViewControler,
+                effect: const ExpandingDotsEffect(
+                    dotHeight: 8,
+                    dotWidth: 8,
+                    spacing: 4,
+                    expansionFactor: 2,
+                    dotColor: Colors.grey,
+                    activeDotColor: Colors.white),
+              ),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBanner(TopStories story, int storyIndex) {
+    return LayoutBuilder(builder: (context, constraints) {
+      final ratio = constraints.maxWidth / constraints.maxHeight;
+      final width = max(constraints.maxWidth, constraints.maxWidth - offset);
+      final height = width / ratio;
+      final top = constraints.maxHeight - height;
+      final left = (constraints.maxWidth - width) * 0.5;
+      return Stack(
+        clipBehavior: Clip.none,
+        fit: StackFit.expand,
+        children: [
+          Positioned(
+            top: top,
+            left: left,
+            width: width,
+            height: height,
+            child: FadeInImage.assetNetwork(
+              placeholder: 'assets/images/placeholder.jpg',
+              imageErrorBuilder: _imageErrorBuilder,
+              fit: BoxFit.cover,
+              image: story.image ?? "",
+            ),
+          ),
+          Align(
+            alignment: Alignment.topRight,
+            child: Padding(
+              padding: EdgeInsets.all(12),
+              child: Text(
+                "$storyIndex",
+                style: TextStyle(fontSize: 20, color: Colors.white),
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(12, 12, 12, 24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  story.title ?? "",
+                  maxLines: 2,
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                Text(
+                  story.hint ?? "",
+                  style: Theme.of(context).textTheme.headlineSmall,
+                )
+              ],
+            ),
+          ),
+        ],
+      );
+    });
+  }
+
   void _startAutoJumpNextPage() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
       _pageViewControler.nextPage(
           duration: const Duration(milliseconds: 250), curve: Curves.easeInOut);
     });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-        child: Stack(fit: StackFit.expand, children: [
-      NotificationListener<Notification>(
-        onNotification: _scrollNotification,
-        child: PageView(
-          physics: const ClampingScrollPhysics(),
-          controller: _pageViewControler,
-          children: () {
-            var subWidgets = topStories.map((story) {
-              int storyIndex = topStories.indexOf(story);
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () {
-                  onTap?.call(story);
-                },
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    FadeInImage.assetNetwork(
-                      placeholder: 'assets/images/placeholder.jpg',
-                      imageErrorBuilder: _imageErrorBuilder,
-                      fit: BoxFit.cover,
-                      image: story.image ?? "",
-                    ),
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: Padding(
-                        padding: EdgeInsets.all(12),
-                        child: Text(
-                          "$storyIndex",
-                          style: TextStyle(fontSize: 20, color: Colors.white),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(12, 12, 12, 24),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            story.title ?? "",
-                            maxLines: 2,
-                            style: Theme.of(context).textTheme.headlineMedium,
-                          ),
-                          Text(
-                            story.hint ?? "",
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          )
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList();
-            if (subWidgets.length > 1) {
-              subWidgets.insert(0, subWidgets.last);
-              subWidgets.add(subWidgets[1]);
-            }
-            return subWidgets;
-          }(),
-        ),
-      ),
-      Align(
-        alignment: Alignment.bottomRight,
-        child: Padding(
-          padding: EdgeInsets.all(12),
-          child: _BannerIndicator(
-            count: topStories.length,
-            controller: _pageViewControler,
-            effect: const ExpandingDotsEffect(
-                dotHeight: 8,
-                dotWidth: 8,
-                spacing: 4,
-                expansionFactor: 2,
-                dotColor: Colors.grey,
-                activeDotColor: Colors.white),
-          ),
-        ),
-      )
-    ]));
   }
 
   bool _resetingPageIndex = false;
@@ -145,14 +179,14 @@ class _DailyHomeBannerState extends State<DailyHomeBanner> {
         !_resetingPageIndex &&
         topStories.length > 1) {
       var currentIndex = _pageViewControler.page?.round();
-      _logger.i("PageView stop at $currentIndex");
+      LogD("PageView stop at $currentIndex");
       if (currentIndex == 0) {
-        _logger.i("PageView jumpToPage to 3");
+        LogD("PageView jumpToPage to 3");
         _resetingPageIndex = true;
         _pageViewControler.jumpToPage(topStories.length);
       } else if (currentIndex == topStories.length + 1) {
         _resetingPageIndex = true;
-        _logger.i("PageView jumpToPage to 1");
+        LogD("PageView jumpToPage to 1");
         _pageViewControler.jumpToPage(1);
       }
       _resetingPageIndex = false;

@@ -81,6 +81,7 @@ flutter:
     - assets/jsons/20230311.json
 
     - assets/images/placeholder.jpg
+    - assets/images/zhihudaily.jpg
 
     - assets/html/story.html
   # An image asset can refer to one or more resolution-specific "variants", see

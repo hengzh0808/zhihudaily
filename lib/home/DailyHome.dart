@@ -1,7 +1,8 @@
+import 'dart:math';
+
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:get/get.dart' hide Response;
 import 'package:zhihudaily/home/DailyHomeGetxCtrl.dart';
@@ -10,6 +11,7 @@ import '../home/DailyHomeBanner.dart';
 import '../base/DailyRoutes.dart';
 import '../base/theme/DailyTheme.dart';
 import '../base/DailyTextTheme.dart';
+import '../base/LogUtil.dart';
 
 class DailyHome extends StatefulWidget {
   const DailyHome({Key? key}) : super(key: key);
@@ -21,6 +23,39 @@ class DailyHome extends StatefulWidget {
 class _DailyHomeState extends State<DailyHome> {
   final _responseDateFormat = DateFormat('yyyy-MM-dd'),
       _cardDateFormat = DateFormat('M月d日');
+
+  @override
+  Widget build(BuildContext context) {
+    return _theme(
+      child: LayoutBuilder(
+        builder: (context, _) {
+          return GetBuilder(
+            init: DailyHomeGetxCtrl(),
+            builder: (ctrl) {
+              return Scaffold(
+                appBar: _buildAppBar(
+                  context,
+                  ctrl,
+                ),
+                body: _buildRefresh(
+                  context,
+                  ctrl,
+                  Obx(() {
+                    return _buildScrollView(
+                      context,
+                      ctrl,
+                      _buildBanner(context, ctrl),
+                      _buildDailyList(context, ctrl),
+                    );
+                  }),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
 
   Widget _theme({required Widget child}) {
     // 这里不能用ChangeNotifierProvider，因为DailyThemeProvider是单例不需要自动移除通知
@@ -114,125 +149,116 @@ class _DailyHomeState extends State<DailyHome> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return _theme(
-      child: LayoutBuilder(
-        builder: (context, _) {
-          return GetBuilder(
-            init: DailyHomeGetxCtrl(),
-            builder: (ctrl) {
-              return Scaffold(
-                appBar: AppBar(
-                  titleSpacing: 0,
-                  title: Row(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Obx(() => Text(
-                                  ctrl.weakDay,
-                                  style:
-                                      Theme.of(context).textTheme.displayMedium,
-                                )),
-                            Obx(() => Text(
-                                  ctrl.date,
-                                  style:
-                                      Theme.of(context).textTheme.displaySmall,
-                                ))
-                          ],
-                        ),
-                      ),
-                      Container(
-                        width: 1.5,
-                        height: kToolbarHeight - 20,
-                        color: Theme.of(context).dividerColor,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 12),
-                        child: Text(
-                          '知乎日报',
-                          style: Theme.of(context).textTheme.displayLarge,
-                        ),
-                      )
-                    ],
-                  ),
-                  actions: [
-                    GestureDetector(
-                      onTap: () => Get.toNamed(DailyRoutes.setting),
-                      child: const Padding(
-                        padding: EdgeInsets.only(right: 12),
-                        child: Icon(
-                          Icons.account_circle,
-                          size: 36,
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-                body: EasyRefresh(
-                  header: ClassicHeader(
-                    textStyle: TextStyle(
-                        color: Theme.of(context).textTheme.displayLarge?.color),
-                    messageStyle: TextStyle(
-                        color:
-                            Theme.of(context).textTheme.displayMedium?.color),
-                    iconTheme: IconThemeData(
-                        color: Theme.of(context).textTheme.displayLarge?.color),
-                  ),
-                  footer: ClassicFooter(
-                    textStyle: TextStyle(
-                        color: Theme.of(context).textTheme.displayLarge?.color),
-                    messageStyle: TextStyle(
-                        color:
-                            Theme.of(context).textTheme.displayMedium?.color),
-                    iconTheme: IconThemeData(
-                        color: Theme.of(context).textTheme.displayLarge?.color),
-                  ),
-                  controller: ctrl.controller,
-                  onRefresh: ctrl.headerRefresh,
-                  onLoad: ctrl.footerLoad,
-                  child: Obx(
-                    () {
-                      return CustomScrollView(
-                        slivers: () {
-                              if (ctrl.dailyItems.isNotEmpty) {
-                                return <Widget>[
-                                  SliverToBoxAdapter(
-                                    child: LayoutBuilder(
-                                      builder: (context, constraints) {
-                                        return SizedBox(
-                                          height: constraints.maxWidth,
-                                          child: DailyHomeBanner(
-                                            topStories: ctrl.topStories,
-                                            onTap: (story) => Get.toNamed(
-                                                DailyRoutes.details,
-                                                arguments: {'id': story.id}),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  )
-                                ];
-                              }
-                              return <Widget>[];
-                            }() +
-                            _buildDailyList(context, ctrl),
-                      );
-                    },
-                  ),
-                ),
-              );
-            },
-          );
-        },
+  AppBar _buildAppBar(BuildContext context, DailyHomeGetxCtrl ctrl) {
+    return AppBar(
+      titleSpacing: 0,
+      title: Row(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Obx(() => Text(
+                      ctrl.weakDay,
+                      style: Theme.of(context).textTheme.displayMedium,
+                    )),
+                Obx(() => Text(
+                      ctrl.date,
+                      style: Theme.of(context).textTheme.displaySmall,
+                    ))
+              ],
+            ),
+          ),
+          Container(
+            width: 1.5,
+            height: kToolbarHeight - 20,
+            color: Theme.of(context).dividerColor,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 12),
+            child: Text(
+              '知乎日报',
+              style: Theme.of(context).textTheme.displayLarge,
+            ),
+          )
+        ],
       ),
+      actions: [
+        GestureDetector(
+          onTap: () => Get.toNamed(DailyRoutes.setting),
+          child: const Padding(
+            padding: EdgeInsets.only(right: 12),
+            child: Icon(
+              Icons.account_circle,
+              size: 36,
+            ),
+          ),
+        )
+      ],
     );
   }
 
-  List<Widget> _buildDailyList(context, DailyHomeGetxCtrl ctrl) {
+  Widget _buildRefresh(
+      BuildContext context, DailyHomeGetxCtrl ctrl, Widget child) {
+    return EasyRefresh(
+      clipBehavior: Clip.none,
+      header: const MaterialHeader(clamping: false),
+      footer: ClassicFooter(
+        textStyle:
+            TextStyle(color: Theme.of(context).textTheme.displayLarge?.color),
+        messageStyle:
+            TextStyle(color: Theme.of(context).textTheme.displayMedium?.color),
+        iconTheme: IconThemeData(
+            color: Theme.of(context).textTheme.displayLarge?.color),
+      ),
+      controller: ctrl.refreshController,
+      onRefresh: ctrl.headerRefresh,
+      onLoad: ctrl.footerLoad,
+      child: child,
+    );
+  }
+
+  Widget _buildScrollView(BuildContext context, DailyHomeGetxCtrl ctrl,
+      Widget? banner, List<Widget> items) {
+    return CustomScrollView(
+      clipBehavior: Clip.none,
+      controller: ctrl.scrollController,
+      slivers: () {
+        final slivers = <Widget>[];
+        if (banner != null) {
+          slivers.add(banner);
+        }
+        slivers.addAll(items);
+        return slivers;
+      }(),
+    );
+  }
+
+  Widget? _buildBanner(BuildContext context, DailyHomeGetxCtrl ctrl) {
+    if (ctrl.dailyItems.isNotEmpty) {
+      return SliverToBoxAdapter(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SizedBox(
+              height: constraints.maxWidth,
+              child: Obx(() {
+                return DailyHomeBanner(
+                  topStories: ctrl.topStories,
+                  onTap: (story) => Get.toNamed(DailyRoutes.details,
+                      arguments: {'id': story.id}),
+                  offset: ctrl.scrollOffset,
+                );
+              }),
+            );
+          },
+        ),
+      );
+    }
+    return null;
+  }
+
+  List<Widget> _buildDailyList(BuildContext context, DailyHomeGetxCtrl ctrl) {
     return () {
       List<Widget> res = [];
       for (int i = 0; i < ctrl.dailyItems.length; i++) {
@@ -335,7 +361,7 @@ class _DailyHomeState extends State<DailyHome> {
   }
 
   Image _imageErrorBuilder(context, error, stackTrace) {
-    Logger(printer: SimplePrinter()).e(error);
+    LogE(error);
     return Image.asset('assets/images/placeholder.jpg', fit: BoxFit.cover);
   }
 }
