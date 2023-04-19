@@ -6,6 +6,8 @@ import 'package:flutter/rendering.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:zhihudaily/base/LogUtil.dart';
+import 'package:zhihudaily/share/DailyShareSheet.dart';
 
 import '../base/theme/DailyTheme.dart';
 import '../base/DioBiger.dart';
@@ -20,7 +22,8 @@ class DailyStoryDetail extends StatefulWidget {
   _DailyStoryDetailState createState() => _DailyStoryDetailState(this.id);
 }
 
-class _DailyStoryDetailState extends State<DailyStoryDetail> {
+class _DailyStoryDetailState extends State<DailyStoryDetail>
+    with SingleTickerProviderStateMixin {
   _DailyStoryDetailState(this.id);
   final int id;
   DailyStoryDetailModel? _storyDetail;
@@ -30,6 +33,35 @@ class _DailyStoryDetailState extends State<DailyStoryDetail> {
     ..setUserAgent('ZhihuHybrid');
   bool _webFinish = false;
   double _webProgress = 0.0;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _loadStory();
+    _setWebDelegate();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _theme(
+      childBuilder: (themeContext, constraints, theme) {
+        return Scaffold(
+          body: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Expanded(
+                child: SizedBox(
+                  child: _buildWebView(context),
+                ),
+              ),
+              _buildBottomBar(themeContext),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   Widget _theme(
       {required Widget Function(
@@ -67,12 +99,165 @@ class _DailyStoryDetailState extends State<DailyStoryDetail> {
     );
   }
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    _loadStory();
-    _setWebDelegate();
+  Widget _buildWebView(BuildContext themeContext) {
+    return LayoutBuilder(builder: (context, constraints) {
+      return Stack(
+        children: [
+          WebViewWidget(controller: _controller),
+          Visibility(
+            visible: !_webFinish,
+            child: Center(
+              child: CircularProgressIndicator(
+                value: _webProgress,
+              ),
+            ),
+          )
+        ],
+      );
+    });
+  }
+
+  Widget _buildBottomBar(BuildContext themeContext) {
+    return Builder(builder: (context) {
+      return SafeArea(
+        top: false,
+        left: false,
+        right: false,
+        child: Container(
+          height: 50,
+          color: Colors.green,
+          child: Row(
+            children: [
+              IconButton(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                icon: Icon(
+                  Icons.arrow_back_ios,
+                  color: Theme.of(themeContext).appBarTheme.iconTheme?.color,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
+                child: Container(
+                  width: 0.5,
+                  color: Theme.of(themeContext).dividerColor,
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+                  child: IntrinsicHeight(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // GestureDetector(
+                        Stack(
+                          alignment: Alignment.topRight,
+                          children: [
+                            Icon(
+                              Icons.chat_bubble_outline,
+                              color: Theme.of(themeContext)
+                                  .appBarTheme
+                                  .iconTheme
+                                  ?.color,
+                            ),
+                            SizedOverflowBox(
+                              alignment: Alignment.topLeft,
+                              size: const Size(0, 10),
+                              child: () {
+                                int? count = _storyExtraInfo?.count?.comments;
+                                if (count != null && count > 0) {
+                                  return Text(
+                                    '$count',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Theme.of(themeContext)
+                                          .appBarTheme
+                                          .iconTheme
+                                          ?.color,
+                                    ),
+                                  );
+                                }
+                              }(),
+                            )
+                          ],
+                        ),
+                        Stack(
+                          alignment: Alignment.topRight,
+                          children: [
+                            Icon(
+                              Icons.thumb_up_outlined,
+                              color: Theme.of(themeContext)
+                                  .appBarTheme
+                                  .iconTheme
+                                  ?.color,
+                            ),
+                            SizedOverflowBox(
+                              alignment: Alignment.topLeft,
+                              size: const Size(0, 10),
+                              child: () {
+                                int? count = _storyExtraInfo?.count?.likes;
+                                if (count != null && count > 0) {
+                                  return Text(
+                                    '$count',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Theme.of(themeContext)
+                                          .appBarTheme
+                                          .iconTheme
+                                          ?.color,
+                                    ),
+                                  );
+                                }
+                              }(),
+                            )
+                          ],
+                        ),
+                        Icon(
+                          Icons.favorite_outline,
+                          color: Theme.of(themeContext)
+                              .appBarTheme
+                              .iconTheme
+                              ?.color,
+                        ),
+                        IconButton(
+                          onPressed: () {
+                            showBottomSheet(
+                              enableDrag: false,
+                              backgroundColor: Colors.red,
+                              transitionAnimationController:
+                                  AnimationController(
+                                duration: Duration(microseconds: 0),
+                                reverseDuration: Duration(microseconds: 0),
+                                debugLabel: 'BottomSheet',
+                                vsync: this,
+                              ),
+                              context: context,
+                              builder: (context) {
+                                return DailyShareSheet();
+                              },
+                            );
+                          },
+                          icon: Icon(
+                            Icons.ios_share_outlined,
+                            color: Theme.of(themeContext)
+                                .appBarTheme
+                                .iconTheme
+                                ?.color,
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+              )
+            ],
+          ),
+        ),
+      );
+    });
   }
 
   void _loadStory() async {
@@ -125,148 +310,5 @@ class _DailyStoryDetailState extends State<DailyStoryDetail> {
         }
       },
     ));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return _theme(
-      childBuilder: (themeContext, constraints, theme) {
-        return Scaffold(
-          body: LayoutBuilder(builder: (context, constraints) {
-            return Stack(
-              children: [
-                WebViewWidget(controller: _controller),
-                Visibility(
-                  visible: !_webFinish,
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      value: _webProgress,
-                    ),
-                  ),
-                )
-              ],
-            );
-          }),
-          bottomNavigationBar: BottomAppBar(
-            color: Theme.of(themeContext).appBarTheme.backgroundColor,
-            child: Container(
-              height: 50,
-              child: Row(
-                children: [
-                  IconButton(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    icon: Icon(
-                      Icons.arrow_back_ios,
-                      color:
-                          Theme.of(themeContext).appBarTheme.iconTheme?.color,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
-                    child: Container(
-                      width: 0.5,
-                      color: Theme.of(themeContext).dividerColor,
-                    ),
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-                      child: IntrinsicHeight(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // GestureDetector(
-                            Stack(
-                              alignment: Alignment.topRight,
-                              children: [
-                                Icon(
-                                  Icons.chat_bubble_outline,
-                                  color: Theme.of(themeContext)
-                                      .appBarTheme
-                                      .iconTheme
-                                      ?.color,
-                                ),
-                                SizedOverflowBox(
-                                  alignment: Alignment.topLeft,
-                                  size: const Size(0, 10),
-                                  child: () {
-                                    int? count =
-                                        _storyExtraInfo?.count?.comments;
-                                    if (count != null && count > 0) {
-                                      return Text(
-                                        '$count',
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: Theme.of(themeContext)
-                                              .appBarTheme
-                                              .iconTheme
-                                              ?.color,
-                                        ),
-                                      );
-                                    }
-                                  }(),
-                                )
-                              ],
-                            ),
-                            Stack(
-                              alignment: Alignment.topRight,
-                              children: [
-                                Icon(
-                                  Icons.thumb_up_outlined,
-                                  color: Theme.of(themeContext)
-                                      .appBarTheme
-                                      .iconTheme
-                                      ?.color,
-                                ),
-                                SizedOverflowBox(
-                                  alignment: Alignment.topLeft,
-                                  size: const Size(0, 10),
-                                  child: () {
-                                    int? count = _storyExtraInfo?.count?.likes;
-                                    if (count != null && count > 0) {
-                                      return Text(
-                                        '$count',
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: Theme.of(themeContext)
-                                              .appBarTheme
-                                              .iconTheme
-                                              ?.color,
-                                        ),
-                                      );
-                                    }
-                                  }(),
-                                )
-                              ],
-                            ),
-                            Icon(
-                              Icons.favorite_outline,
-                              color: Theme.of(themeContext)
-                                  .appBarTheme
-                                  .iconTheme
-                                  ?.color,
-                            ),
-                            Icon(
-                              Icons.ios_share_outlined,
-                              color: Theme.of(themeContext)
-                                  .appBarTheme
-                                  .iconTheme
-                                  ?.color,
-                            )
-                          ],
-                        ),
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
   }
 }
